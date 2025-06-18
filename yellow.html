@@ -26,7 +26,7 @@
             overflow-x: hidden;
         }
         
-        /* Индустриальный фон с сеткой */
+        /* Упрощенный индустриальный фон */
         #industrial-bg {
             position: fixed;
             top: 0;
@@ -34,14 +34,25 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background:
-                linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="%23ffd700" stroke-width="0.3" stroke-dasharray="2,2"/></svg>');
-            background-size: 50px 50px;
-            opacity: 0.7;
+            background: var(--industrial-dark);
+            opacity: 0.8;
         }
         
-        /* Эффект неонового свечения */
+        /* Простые точки вместо SVG фона */
+        .grid-dots {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255, 242, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 242, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Неоновое свечение */
         .neon-glow {
             position: fixed;
             top: 50%;
@@ -59,6 +70,57 @@
             100% { opacity: 0.1; width: 500px; height: 500px; }
         }
         
+        /* Сканирующая линия */
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, 
+                transparent 0%, 
+                var(--neon-yellow) 50%, 
+                transparent 100%);
+            z-index: 9999;
+            pointer-events: none;
+            animation: scan 6s linear infinite;
+            opacity: 0.5;
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+        
+        @keyframes scan {
+            0% { top: -10px; }
+            100% { top: 100%; }
+        }
+        
+        /* Индикаторы состояния */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+            animation: blink 2s infinite;
+        }
+        
+        .indicator:nth-child(1) { animation-delay: 0s; }
+        .indicator:nth-child(2) { animation-delay: 0.4s; }
+        .indicator:nth-child(3) { animation-delay: 0.8s; }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        /* Навигационная панель */
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -76,18 +138,6 @@
             letter-spacing: 3px;
             color: var(--neon-yellow);
             text-shadow: 0 0 10px rgba(255, 242, 0, 0.7);
-            position: relative;
-        }
-        
-        .logo::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--neon-yellow);
-            box-shadow: 0 0 10px var(--neon-yellow);
         }
         
         .nav-links {
@@ -125,6 +175,7 @@
             width: 100%;
         }
         
+        /* Основное содержимое */
         .content {
             display: flex;
             flex-direction: column;
@@ -143,18 +194,6 @@
             position: relative;
         }
         
-        .video-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 65%, rgba(255, 242, 0, 0.05) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
         .video-container iframe {
             width: 100%;
             height: 450px;
@@ -162,7 +201,7 @@
             display: block;
         }
         
-        /* Стили для скриншотов */
+        /* Скриншоты */
         .screenshots {
             display: flex;
             gap: 20px;
@@ -200,6 +239,7 @@
             filter: sepia(20%) brightness(1);
         }
         
+        /* Кнопки */
         .btn {
             padding: 12px 35px;
             background: linear-gradient(to right, var(--industrial-dark), var(--black));
@@ -219,47 +259,10 @@
             text-transform: uppercase;
         }
         
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 242, 0, 0.1), transparent);
-            transition: left 0.7s ease;
-        }
-        
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 0 25px rgba(255, 242, 0, 0.4);
             background: linear-gradient(to right, var(--dark-gray), var(--industrial-dark));
-            color: var(--neon-yellow);
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn-discord {
-            background: linear-gradient(to right, #36393f, #1e1e1e);
-            border: 1px solid #7289da;
-            box-shadow: 0 0 15px rgba(114, 137, 218, 0.3);
-        }
-        
-        .btn-discord:hover {
-            background: linear-gradient(to right, #7289da, #36393f);
-            color: white;
-        }
-        
-        .btn-reviews {
-            background: linear-gradient(to right, var(--dark-gray), var(--black));
-            border: 1px solid var(--light-gray);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-        }
-        
-        .btn-reviews:hover {
-            background: linear-gradient(to right, var(--light-gray), var(--dark-gray));
             color: var(--neon-yellow);
         }
         
@@ -269,7 +272,7 @@
             margin-top: 30px;
         }
         
-        /* Модальное окно (индустриальный стиль) */
+        /* Модальное окно */
         .modal {
             position: fixed;
             top: 0;
@@ -277,14 +280,13 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
             z-index: 100;
             display: flex;
             justify-content: center;
             align-items: center;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s ease;
         }
         
         .modal.active {
@@ -300,27 +302,14 @@
             max-width: 90%;
             box-shadow: 0 0 30px rgba(255, 242, 0, 0.3);
             text-align: center;
-            transform: translateY(30px) scale(0.95);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transition-delay: 0.1s;
+            transform: translateY(30px);
+            transition: all 0.4s ease;
             border: 1px solid var(--neon-yellow);
             position: relative;
-            overflow: hidden;
-        }
-        
-        .modal-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--neon-yellow);
-            box-shadow: 0 0 10px var(--neon-yellow);
         }
         
         .modal.active .modal-content {
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
         }
         
         .modal-title {
@@ -329,7 +318,6 @@
             margin-bottom: 25px;
             color: var(--neon-yellow);
             letter-spacing: 2px;
-            text-shadow: 0 0 8px rgba(255, 242, 0, 0.5);
         }
         
         .modal-buttons {
@@ -368,18 +356,11 @@
             cursor: pointer;
             transition: all 0.3s ease;
             color: white;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 242, 0, 0.1);
         }
         
         .close-btn:hover {
             color: var(--neon-yellow);
-            transform: rotate(90deg) scale(1.1);
-            background: rgba(255, 242, 0, 0.2);
+            transform: rotate(90deg);
         }
         
         .section {
@@ -388,68 +369,37 @@
             border-top: 1px solid rgba(255, 242, 0, 0.2);
         }
         
-        /* Эффект индустриальных линий */
-        .scan-line {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(to right, 
-                transparent 0%, 
-                var(--neon-yellow) 50%, 
-                transparent 100%);
-            z-index: 9999;
-            pointer-events: none;
-            animation: scan 6s linear infinite;
-            opacity: 0.5;
-            box-shadow: 0 0 10px var(--neon-yellow);
-        }
-        
-        @keyframes scan {
-            0% { top: -10px; }
-            100% { top: 100%; }
-        }
-        
-        /* Эффект мигающих индикаторов */
-        .status-indicator {
+        /* Цифровые часы */
+        .digital-clock {
             position: fixed;
             bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--neon-yellow);
-            box-shadow: 0 0 10px var(--neon-yellow);
-            animation: blink 2s infinite;
-        }
-        
-        .indicator:nth-child(1) { animation-delay: 0s; }
-        .indicator:nth-child(2) { animation-delay: 0.4s; }
-        .indicator:nth-child(3) { animation-delay: 0.8s; }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            left: 20px;
+            color: var(--neon-yellow);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            text-shadow: 0 0 5px var(--neon-yellow);
+            z-index: 100;
         }
     </style>
 </head>
 <body>
     <!-- Эффекты фона -->
     <div id="industrial-bg"></div>
+    <div class="grid-dots"></div>
     <div class="neon-glow"></div>
     <div class="scan-line"></div>
+    
+    <!-- Индикаторы состояния -->
     <div class="status-indicator">
         <div class="indicator"></div>
         <div class="indicator"></div>
         <div class="indicator"></div>
     </div>
     
+    <!-- Цифровые часы -->
+    <div class="digital-clock" id="digital-clock"></div>
+    
+    <!-- Навигационная панель -->
     <div class="navbar">
         <div class="logo">ECLIPSE.GG</div>
         <div class="nav-links">
@@ -458,9 +408,10 @@
         </div>
     </div>
     
+    <!-- Основное содержимое -->
     <div class="content">
         <div class="video-container">
-            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/watch?v=3mm-4XKwCis" frameborder="0" allowfullscreen></iframe>
         </div>
         
         <!-- Скриншоты -->
@@ -484,6 +435,7 @@
         </div>
     </div>
     
+    <!-- Модальное окно -->
     <div class="modal" id="modal">
         <div class="modal-content">
             <span class="close-btn" id="close-btn">&times;</span>
@@ -508,6 +460,18 @@
     </div>
     
     <script>
+        // Цифровые часы
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('digital-clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+        
         // Модальное окно
         const modal = document.getElementById('modal');
         const buyBtn = document.getElementById('buy-btn');
@@ -525,12 +489,10 @@
         }
         
         buyBtn.addEventListener('click', openModal);
-        
         buyLink.addEventListener('click', (e) => {
             e.preventDefault();
             openModal();
         });
-        
         closeBtn.addEventListener('click', closeModal);
         
         window.addEventListener('click', (e) => {
@@ -539,29 +501,27 @@
             }
         });
         
-        // Закрытие по ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modal.classList.contains('active')) {
                 closeModal();
             }
         });
         
-        // Случайное мерцание неоновых элементов
+        // Случайное мерцание элементов
         function neonFlicker() {
             const elements = document.querySelectorAll('.logo, .btn, .modal-title, .indicator');
             elements.forEach(el => {
-                if (Math.random() > 0.9) {
+                if (Math.random() > 0.95) {
                     const intensity = Math.random() * 0.5 + 0.5;
-                    el.style.textShadow = `0 0 ${Math.random() * 15 + 5}px rgba(255, 242, 0, ${intensity})`;
+                    el.style.opacity = intensity;
                     setTimeout(() => {
-                        el.style.textShadow = '0 0 10px rgba(255, 242, 0, 0.7)';
+                        el.style.opacity = 1;
                     }, 100);
                 }
             });
             setTimeout(neonFlicker, 300);
         }
         
-        // Инициализация эффектов
         window.onload = function() {
             neonFlicker();
         };
