@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>flippa.fun - Премиум доступ</title>
+    <title>flippa.fun - Покупка подписки</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -92,7 +92,7 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
         
-        /* Модальное окно */
+        /* Модальные окна */
         .modal {
             display: none;
             position: fixed;
@@ -233,85 +233,6 @@
             transform: translateY(-2px);
         }
         
-        .social-login {
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-        
-        .social-login p {
-            margin-bottom: 15px;
-            position: relative;
-        }
-        
-        .social-login p::before,
-        .social-login p::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            width: 30%;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .social-login p::before {
-            left: 0;
-        }
-        
-        .social-login p::after {
-            right: 0;
-        }
-        
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .social-icon {
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(60, 60, 65, 0.8);
-            border-radius: 50%;
-            color: #fff;
-            font-size: 1.3rem;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
-        
-        .social-icon:hover {
-            transform: translateY(-3px);
-        }
-        
-        .telegram {
-            background: #0088cc;
-        }
-        
-        .telegram:hover {
-            background: #0077b3;
-            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
-        }
-        
-        .vk {
-            background: #4a76a8;
-        }
-        
-        .vk:hover {
-            background: #3f6a9b;
-            box-shadow: 0 5px 15px rgba(74, 118, 168, 0.4);
-        }
-        
-        .google {
-            background: #dd4b39;
-        }
-        
-        .google:hover {
-            background: #c23321;
-            box-shadow: 0 5px 15px rgba(221, 75, 57, 0.4);
-        }
-        
         /* Контент */
         .content {
             position: relative;
@@ -419,33 +340,9 @@
             cursor: not-allowed;
         }
         
-        .account-section {
-            display: none;
-            background: rgba(40, 40, 45, 0.95);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem auto;
-            max-width: 600px;
-            text-align: left;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        }
-        
-        .account-section::before {
-            content: "";
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, 
-                #ff0000, #ff9900, #ffff00, 
-                #00ff00, #00ffff, #0000ff, 
-                #9900ff, #ff00ff, #ff0000);
-            background-size: 400% 400%;
-            border-radius: 18px;
-            z-index: -1;
-            animation: gradient-border 8s ease infinite;
+        /* Модальное окно аккаунта */
+        .account-modal .modal-content {
+            max-width: 500px;
         }
         
         .account-header {
@@ -494,33 +391,9 @@
             font-weight: bold;
         }
         
-        .admin-panel {
-            display: none;
-            background: rgba(30, 30, 35, 0.95);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem auto;
-            max-width: 900px;
-            text-align: left;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        }
-        
-        .admin-panel::before {
-            content: "";
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, 
-                #ff0000, #ff9900, #ffff00, 
-                #00ff00, #00ffff, #0000ff, 
-                #9900ff, #ff00ff, #ff0000);
-            background-size: 400% 400%;
-            border-radius: 18px;
-            z-index: -1;
-            animation: gradient-border 8s ease infinite;
+        /* Админ-панель */
+        .admin-modal .modal-content {
+            max-width: 800px;
         }
         
         .admin-title {
@@ -710,7 +583,7 @@
     <!-- Модальное окно входа -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
-            <span class="close-btn" id="closeModal">&times;</span>
+            <span class="close-btn" id="closeLoginModal">&times;</span>
             <div class="auth-tabs">
                 <button class="tab-btn active" data-tab="login">Войти</button>
                 <button class="tab-btn" data-tab="register">Регистрация</button>
@@ -728,21 +601,6 @@
                     </div>
                     <button type="submit" class="submit-btn">Войти</button>
                 </form>
-                
-                <div class="social-login">
-                    <p>Или войдите через</p>
-                    <div class="social-icons">
-                        <a href="#" class="social-icon telegram">
-                            <i class="fab fa-telegram"></i>
-                        </a>
-                        <a href="#" class="social-icon vk">
-                            <i class="fab fa-vk"></i>
-                        </a>
-                        <a href="#" class="social-icon google">
-                            <i class="fab fa-google"></i>
-                        </a>
-                    </div>
-                </div>
             </div>
             
             <div class="tab-content" id="registerTab">
@@ -769,41 +627,10 @@
         </div>
     </div>
     
-    <!-- Основной контент -->
-    <div class="content">
-        <h1 class="welcome">Премиум доступ к flippa.fun</h1>
-        
-        <div class="pricing-container">
-            <h2 class="pricing-title">Выберите период доступа</h2>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="duration">1 ДЕНЬ</div>
-                    <div class="price">100₽</div>
-                    <button class="buy-btn" data-days="1">Купить сейчас</button>
-                </div>
-                
-                <div class="pricing-card">
-                    <div class="duration">7 ДНЕЙ</div>
-                    <div class="price">400₽</div>
-                    <button class="buy-btn" data-days="7">Купить сейчас</button>
-                </div>
-                
-                <div class="pricing-card">
-                    <div class="duration">30 ДНЕЙ</div>
-                    <div class="price">1500₽</div>
-                    <button class="buy-btn" data-days="30">Купить сейчас</button>
-                </div>
-                
-                <div class="pricing-card">
-                    <div class="duration">90 ДНЕЙ</div>
-                    <div class="price">3000₽</div>
-                    <button class="buy-btn" data-days="90">Купить сейчас</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Секция аккаунта -->
-        <div class="account-section" id="accountSection">
+    <!-- Модальное окно аккаунта -->
+    <div class="modal account-modal" id="accountModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeAccountModal">&times;</span>
             <div class="account-header">
                 <h2 class="account-title">Мой аккаунт</h2>
                 <button class="nav-btn" id="logoutBtn">
@@ -831,9 +658,12 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Админ-панель -->
-        <div class="admin-panel" id="adminPanel">
+    </div>
+    
+    <!-- Модальное окно админ-панели -->
+    <div class="modal admin-modal" id="adminModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeAdminModal">&times;</span>
             <h2 class="admin-title">Административная панель</h2>
             
             <div class="users-list">
@@ -858,6 +688,40 @@
                 <i class="fas fa-sync-alt"></i> Обновить список
             </button>
         </div>
+    </div>
+    
+    <!-- Основной контент -->
+    <div class="content">
+        <h1 class="welcome">Покупка чита</h1>
+        
+        <div class="pricing-container">
+            <h2 class="pricing-title">Длительность подписки</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="duration">1 ДЕНЬ</div>
+                    <div class="price">100₽</div>
+                    <button class="buy-btn" data-days="1">Купить сейчас</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="duration">7 ДНЕЙ</div>
+                    <div class="price">400₽</div>
+                    <button class="buy-btn" data-days="7">Купить сейчас</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="duration">30 ДНЕЙ</div>
+                    <div class="price">1500₽</div>
+                    <button class="buy-btn" data-days="30">Купить сейчас</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="duration">90 ДНЕЙ</div>
+                    <div class="price">3000₽</div>
+                    <button class="buy-btn" data-days="90">Купить сейчас</button>
+                </div>
+            </div>
+        </div>
         
         <div class="footer">
             © 2023 flippa.fun | Все права защищены
@@ -865,7 +729,7 @@
     </div>
 
     <script>
-        // База данных пользователей (в реальном проекте это должен быть сервер)
+        // База данных пользователей
         const DB = {
             users: JSON.parse(localStorage.getItem('flippa_users')) || [],
             currentUser: JSON.parse(localStorage.getItem('flippa_currentUser')) || null,
@@ -893,7 +757,7 @@
                         active: false,
                         expires: null
                     },
-                    isAdmin: email === 'admin@flippa.fun' // Для демо делаем админом
+                    isAdmin: email === 'admin@flippa.fun' // Админ по email
                 };
                 
                 this.users.push(newUser);
@@ -950,14 +814,16 @@
             accountBtn: document.getElementById('accountBtn'),
             adminBtn: document.getElementById('adminBtn'),
             logoutBtn: document.getElementById('logoutBtn'),
-            closeModal: document.getElementById('closeModal'),
+            closeLoginModal: document.getElementById('closeLoginModal'),
+            closeAccountModal: document.getElementById('closeAccountModal'),
+            closeAdminModal: document.getElementById('closeAdminModal'),
             loginModal: document.getElementById('loginModal'),
+            accountModal: document.getElementById('accountModal'),
+            adminModal: document.getElementById('adminModal'),
             loginForm: document.getElementById('loginForm'),
             registerForm: document.getElementById('registerForm'),
             tabBtns: document.querySelectorAll('.tab-btn'),
             buyBtns: document.querySelectorAll('.buy-btn'),
-            accountSection: document.getElementById('accountSection'),
-            adminPanel: document.getElementById('adminPanel'),
             accountName: document.getElementById('accountName'),
             accountEmail: document.getElementById('accountEmail'),
             accountStatus: document.getElementById('accountStatus'),
@@ -989,7 +855,7 @@
                 elements.accountBtn.style.display = 'flex';
                 elements.accountText.textContent = user.name;
                 
-                // Показываем данные аккаунта
+                // Обновляем данные аккаунта
                 elements.accountName.textContent = user.name;
                 elements.accountEmail.textContent = user.email;
                 
@@ -1007,17 +873,12 @@
                     elements.adminBtn.style.display = 'flex';
                 } else {
                     elements.adminBtn.style.display = 'none';
-                    elements.adminPanel.style.display = 'none';
                 }
-                
-                elements.accountSection.style.display = 'block';
             } else {
                 // Пользователь не авторизован
                 elements.loginBtn.style.display = 'flex';
                 elements.accountBtn.style.display = 'none';
                 elements.adminBtn.style.display = 'none';
-                elements.accountSection.style.display = 'none';
-                elements.adminPanel.style.display = 'none';
             }
         }
         
@@ -1075,13 +936,36 @@
             elements.loginModal.style.display = 'flex';
         });
         
-        elements.closeModal.addEventListener('click', () => {
+        elements.accountBtn.addEventListener('click', () => {
+            elements.accountModal.style.display = 'flex';
+        });
+        
+        elements.adminBtn.addEventListener('click', () => {
+            elements.adminModal.style.display = 'flex';
+            updateUsersTable();
+        });
+        
+        elements.closeLoginModal.addEventListener('click', () => {
             elements.loginModal.style.display = 'none';
+        });
+        
+        elements.closeAccountModal.addEventListener('click', () => {
+            elements.accountModal.style.display = 'none';
+        });
+        
+        elements.closeAdminModal.addEventListener('click', () => {
+            elements.adminModal.style.display = 'none';
         });
         
         window.addEventListener('click', (e) => {
             if (e.target === elements.loginModal) {
                 elements.loginModal.style.display = 'none';
+            }
+            if (e.target === elements.accountModal) {
+                elements.accountModal.style.display = 'none';
+            }
+            if (e.target === elements.adminModal) {
+                elements.adminModal.style.display = 'none';
             }
         });
         
@@ -1137,16 +1021,7 @@
             DB.logoutUser();
             showNotification('Вы вышли из системы', false);
             updateUI();
-        });
-        
-        elements.accountBtn.addEventListener('click', () => {
-            elements.accountSection.style.display = 'block';
-            elements.adminPanel.style.display = 'none';
-        });
-        
-        elements.adminBtn.addEventListener('click', () => {
-            elements.adminPanel.style.display = 'block';
-            updateUsersTable();
+            elements.accountModal.style.display = 'none';
         });
         
         elements.refreshUsers.addEventListener('click', () => {
@@ -1172,19 +1047,6 @@
                 } else {
                     showNotification('Ошибка при оформлении подписки', true);
                 }
-            });
-        });
-        
-        // Обработка кнопок соцсетей
-        document.querySelectorAll('.social-icon').forEach(icon => {
-            icon.addEventListener('click', (e) => {
-                e.preventDefault();
-                let service = 'социальной сети';
-                if (icon.classList.contains('telegram')) service = 'Telegram';
-                if (icon.classList.contains('vk')) service = 'ВКонтакте';
-                if (icon.classList.contains('google')) service = 'Google';
-                
-                showNotification(`Авторизация через ${service}...`, false);
             });
         });
         
@@ -1219,11 +1081,9 @@
             
             // Добавляем тестовых пользователей при первом запуске
             if (DB.users.length === 0) {
-                DB.registerUser('Администратор', 'admin@flippa.fun', 'admin123');
+                DB.registerUser('Администратор', 'admin@flippa.fun', 'e2e89996');
                 DB.registerUser('Иван Иванов', 'user@example.com', 'password123');
-                DB.loginUser('admin@flippa.fun', 'admin123');
-                DB.updateSubscription(DB.currentUser.id, 365);
-                updateUI();
+                DB.updateSubscription(DB.users[0].id, 365); // Активируем подписку админу
             }
         }
         
