@@ -112,9 +112,11 @@
             border-radius: 16px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 450px;
+            max-width: 800px;
             position: relative;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         /* RGB градиентная обводка */
@@ -392,15 +394,41 @@
         }
         
         /* Админ-панель */
-        .admin-modal .modal-content {
-            max-width: 800px;
-        }
-        
         .admin-title {
             font-size: 2rem;
             margin-bottom: 1.5rem;
             text-align: center;
             color: #fff;
+        }
+        
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .admin-tab-btn.active {
+            color: #fff;
+            border-bottom: 3px solid #fff;
+        }
+        
+        .admin-tab-content {
+            display: none;
+        }
+        
+        .admin-tab-content.active {
+            display: block;
         }
         
         .users-table {
@@ -464,6 +492,29 @@
         
         .admin-btn:hover {
             background: linear-gradient(45deg, #5a5a5a, #3a3a3a);
+        }
+        
+        .payment-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #ff9800;
+            color: #000;
+        }
+        
+        .status-completed {
+            background: #4caf50;
+            color: #fff;
+        }
+        
+        .status-rejected {
+            background: #f44336;
+            color: #fff;
         }
         
         .footer {
@@ -666,27 +717,51 @@
             <span class="close-btn" id="closeAdminModal">&times;</span>
             <h2 class="admin-title">Административная панель</h2>
             
-            <div class="users-list">
-                <h3>Зарегистрированные пользователи</h3>
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Имя</th>
-                            <th>Email</th>
-                            <th>Подписка</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <!-- Данные будут заполнены через JS -->
-                    </tbody>
-                </table>
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="users">Пользователи</button>
+                <button class="admin-tab-btn" data-tab="payments">Заявки на оплату</button>
             </div>
             
-            <button class="admin-btn" id="refreshUsers">
-                <i class="fas fa-sync-alt"></i> Обновить список
-            </button>
+            <div class="admin-tab-content active" id="usersTab">
+                <div class="users-list">
+                    <h3>Зарегистрированные пользователи</h3>
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Подписка</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Данные будут заполнены через JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="paymentsTab">
+                <div class="payments-list">
+                    <h3>Заявки на оплату</h3>
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>Период</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody">
+                            <!-- Данные будут заполнены через JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -700,25 +775,25 @@
                 <div class="pricing-card">
                     <div class="duration">1 ДЕНЬ</div>
                     <div class="price">100₽</div>
-                    <button class="buy-btn" data-days="1">Купить сейчас</button>
+                    <button class="buy-btn" data-days="1" data-price="100">Купить сейчас</button>
                 </div>
                 
                 <div class="pricing-card">
                     <div class="duration">7 ДНЕЙ</div>
                     <div class="price">400₽</div>
-                    <button class="buy-btn" data-days="7">Купить сейчас</button>
+                    <button class="buy-btn" data-days="7" data-price="400">Купить сейчас</button>
                 </div>
                 
                 <div class="pricing-card">
                     <div class="duration">30 ДНЕЙ</div>
                     <div class="price">1500₽</div>
-                    <button class="buy-btn" data-days="30">Купить сейчас</button>
+                    <button class="buy-btn" data-days="30" data-price="1500">Купить сейчас</button>
                 </div>
                 
                 <div class="pricing-card">
                     <div class="duration">90 ДНЕЙ</div>
                     <div class="price">3000₽</div>
-                    <button class="buy-btn" data-days="90">Купить сейчас</button>
+                    <button class="buy-btn" data-days="90" data-price="3000">Купить сейчас</button>
                 </div>
             </div>
         </div>
@@ -732,10 +807,15 @@
         // База данных пользователей
         const DB = {
             users: JSON.parse(localStorage.getItem('flippa_users')) || [],
+            payments: JSON.parse(localStorage.getItem('flippa_payments')) || [],
             currentUser: JSON.parse(localStorage.getItem('flippa_currentUser')) || null,
             
             saveUsers: function() {
                 localStorage.setItem('flippa_users', JSON.stringify(this.users));
+            },
+            
+            savePayments: function() {
+                localStorage.setItem('flippa_payments', JSON.stringify(this.payments));
             },
             
             saveCurrentUser: function() {
@@ -780,6 +860,21 @@
                 this.saveCurrentUser();
             },
             
+            createPayment: function(userId, days, price) {
+                const payment = {
+                    id: `PAY-${Date.now().toString()}`,
+                    userId,
+                    days,
+                    price,
+                    status: 'pending', // pending, completed, rejected
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.payments.push(payment);
+                this.savePayments();
+                return payment;
+            },
+            
             updateSubscription: function(userId, days) {
                 const user = this.users.find(u => u.id === userId);
                 if (!user) return false;
@@ -805,6 +900,25 @@
             
             getUsers: function() {
                 return this.users;
+            },
+            
+            getPayments: function() {
+                return this.payments;
+            },
+            
+            updatePaymentStatus: function(paymentId, status) {
+                const payment = this.payments.find(p => p.id === paymentId);
+                if (!payment) return false;
+                
+                payment.status = status;
+                this.savePayments();
+                
+                // Если оплата подтверждена, активируем подписку
+                if (status === 'completed') {
+                    this.updateSubscription(payment.userId, payment.days);
+                }
+                
+                return true;
             }
         };
         
@@ -823,6 +937,7 @@
             loginForm: document.getElementById('loginForm'),
             registerForm: document.getElementById('registerForm'),
             tabBtns: document.querySelectorAll('.tab-btn'),
+            adminTabBtns: document.querySelectorAll('.admin-tab-btn'),
             buyBtns: document.querySelectorAll('.buy-btn'),
             accountName: document.getElementById('accountName'),
             accountEmail: document.getElementById('accountEmail'),
@@ -830,7 +945,7 @@
             accountExpires: document.getElementById('accountExpires'),
             accountText: document.getElementById('accountText'),
             usersTableBody: document.getElementById('usersTableBody'),
-            refreshUsers: document.getElementById('refreshUsers'),
+            paymentsTableBody: document.getElementById('paymentsTableBody'),
             notification: document.getElementById('notification')
         };
         
@@ -914,21 +1029,79 @@
                 
                 elements.usersTableBody.appendChild(row);
             });
+        }
+        
+        // Обновление списка платежей в админ-панели
+        function updatePaymentsTable() {
+            const payments = DB.getPayments();
+            elements.paymentsTableBody.innerHTML = '';
             
-            // Добавляем обработчики для кнопок действий
-            document.querySelectorAll('.edit-user').forEach(btn => {
+            payments.forEach(payment => {
+                const user = DB.users.find(u => u.id === payment.userId);
+                const userName = user ? user.name : 'Неизвестный';
+                
+                // Статус платежа
+                let statusText = '';
+                if (payment.status === 'pending') {
+                    statusText = '<span class="payment-status status-pending">Ожидает подтверждения</span>';
+                } else if (payment.status === 'completed') {
+                    statusText = '<span class="payment-status status-completed">Подтвержден</span>';
+                } else {
+                    statusText = '<span class="payment-status status-rejected">Отклонен</span>';
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${payment.id.substring(0, 8)}</td>
+                    <td>${userName}</td>
+                    <td>${payment.days} дней</td>
+                    <td>${payment.price}₽</td>
+                    <td>${statusText}</td>
+                    <td>
+                        ${payment.status === 'pending' ? `
+                            <button class="action-btn complete-payment" data-id="${payment.id}">
+                                <i class="fas fa-check"></i> Подтвердить
+                            </button>
+                            <button class="action-btn reject-payment" data-id="${payment.id}">
+                                <i class="fas fa-times"></i> Отклонить
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                elements.paymentsTableBody.appendChild(row);
+            });
+            
+            // Добавляем обработчики для кнопок подтверждения/отклонения
+            document.querySelectorAll('.complete-payment').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const userId = btn.getAttribute('data-id');
-                    showNotification(`Редактирование пользователя ${userId}`, false);
+                    const paymentId = btn.getAttribute('data-id');
+                    if (DB.updatePaymentStatus(paymentId, 'completed')) {
+                        showNotification('Оплата подтверждена! Подписка активирована.', false);
+                        updatePaymentsTable();
+                    }
                 });
             });
             
-            document.querySelectorAll('.delete-user').forEach(btn => {
+            document.querySelectorAll('.reject-payment').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const userId = btn.getAttribute('data-id');
-                    showNotification(`Пользователь ${userId} удален`, false);
+                    const paymentId = btn.getAttribute('data-id');
+                    if (DB.updatePaymentStatus(paymentId, 'rejected')) {
+                        showNotification('Оплата отклонена.', false);
+                        updatePaymentsTable();
+                    }
                 });
             });
+        }
+        
+        // Автоматическое обновление админ-панели
+        function startAdminPanelUpdates() {
+            setInterval(() => {
+                if (document.getElementById('adminModal').style.display === 'flex') {
+                    updateUsersTable();
+                    updatePaymentsTable();
+                }
+            }, 3000); // Обновление каждые 3 секунды
         }
         
         // Обработчики событий
@@ -943,6 +1116,7 @@
         elements.adminBtn.addEventListener('click', () => {
             elements.adminModal.style.display = 'flex';
             updateUsersTable();
+            updatePaymentsTable();
         });
         
         elements.closeLoginModal.addEventListener('click', () => {
@@ -977,6 +1151,23 @@
                 btn.classList.add('active');
                 const tabId = btn.getAttribute('data-tab');
                 document.getElementById(`${tabId}Tab`).classList.add('active');
+            });
+        });
+        
+        elements.adminTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                elements.adminTabBtns.forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tabId = btn.getAttribute('data-tab');
+                document.getElementById(`${tabId}Tab`).classList.add('active');
+                
+                if (tabId === 'users') {
+                    updateUsersTable();
+                } else {
+                    updatePaymentsTable();
+                }
             });
         });
         
@@ -1024,11 +1215,6 @@
             elements.accountModal.style.display = 'none';
         });
         
-        elements.refreshUsers.addEventListener('click', () => {
-            updateUsersTable();
-            showNotification('Список пользователей обновлен', false);
-        });
-        
         // Обработка покупки подписки
         elements.buyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1039,14 +1225,12 @@
                 }
                 
                 const days = parseInt(btn.getAttribute('data-days'));
-                const userId = DB.currentUser.id;
+                const price = parseInt(btn.getAttribute('data-price'));
                 
-                if (DB.updateSubscription(userId, days)) {
-                    showNotification(`Подписка успешно оформлена на ${days} дней!`, false);
-                    updateUI();
-                } else {
-                    showNotification('Ошибка при оформлении подписки', true);
-                }
+                // Создаем заявку на оплату
+                const payment = DB.createPayment(DB.currentUser.id, days, price);
+                
+                showNotification(`Заявка #${payment.id.substring(0, 8)} создана! Ожидайте подтверждения администратора.`, false);
             });
         });
         
@@ -1083,8 +1267,17 @@
             if (DB.users.length === 0) {
                 DB.registerUser('Администратор', 'admin@flippa.fun', 'e2e89996');
                 DB.registerUser('Иван Иванов', 'user@example.com', 'password123');
-                DB.updateSubscription(DB.users[0].id, 365); // Активируем подписку админу
+                
+                // Активируем подписку админу
+                DB.updateSubscription(DB.users[0].id, 365);
+                
+                // Создаем тестовые платежи
+                DB.createPayment(DB.users[1].id, 30, 1500);
+                DB.createPayment(DB.users[1].id, 7, 400);
             }
+            
+            // Запускаем автообновление админ-панели
+            startAdminPanelUpdates();
         }
         
         // Запуск приложения
