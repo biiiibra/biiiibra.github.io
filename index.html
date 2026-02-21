@@ -20,6 +20,7 @@
             --particle-color: #ff6b00;
             --sound-on-color: #ff6b00;
             --sound-off-color: #888;
+            --chat-bg: rgba(20, 8, 0, 0.3);
         }
 
         body { 
@@ -46,8 +47,8 @@
         }
 
         .container { 
-            width: 90%;
-            max-width: 480px;
+            width: 95%;
+            max-width: 500px;
             background: var(--container-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -60,7 +61,8 @@
             box-shadow: var(--glass-shadow);
             overflow: hidden;
             transition: all 0.3s ease;
-            min-height: 500px;
+            height: 85vh;
+            max-height: 750px;
         }
 
         /* ЭКРАНЫ АВТОРИЗАЦИИ */
@@ -121,7 +123,7 @@
             margin-bottom: 5px;
         }
 
-        input { 
+        input, textarea { 
             width: 100%; 
             padding: 16px 18px; 
             background: rgba(20, 10, 0, 0.5);
@@ -134,16 +136,22 @@
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             transition: all 0.3s ease;
+            font-family: inherit;
         }
 
-        input:focus { 
+        textarea {
+            resize: none;
+            min-height: 80px;
+        }
+
+        input:focus, textarea:focus { 
             border-color: var(--accent-color);
             background: rgba(40, 20, 0, 0.6);
             box-shadow: 0 0 25px rgba(255, 107, 0, 0.4);
             color: white;
         }
 
-        input::placeholder {
+        input::placeholder, textarea::placeholder {
             color: rgba(255, 140, 64, 0.5);
         }
 
@@ -178,6 +186,12 @@
             transform: translateY(0);
         }
 
+        button.small {
+            padding: 10px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
         .error-message {
             color: var(--error-color);
             font-size: 14px;
@@ -202,13 +216,12 @@
         #chat-screen { 
             display: none; 
             flex-direction: column; 
-            height: 80vh;
-            max-height: 700px;
+            height: 100%;
             width: 100%;
         }
 
         .header {
-            padding: 15px 20px;
+            padding: 12px 15px;
             background: rgba(20, 8, 0, 0.4);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -217,25 +230,136 @@
             align-items: center;
             border-bottom: 1px solid var(--glass-border);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         #display-name {
-            font-size: 1.2em;
+            font-size: 1.1em;
             background: rgba(255, 107, 0, 0.15);
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 30px;
             border: 1px solid rgba(255, 107, 0, 0.3);
             backdrop-filter: blur(4px);
             color: #ffb08a;
             font-weight: bold;
+        }
+
+        .chat-selector {
+            position: relative;
+            min-width: 150px;
+        }
+
+        .selected-chat {
+            background: rgba(20, 8, 0, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .selected-chat:hover {
+            background: rgba(40, 16, 0, 0.8);
+            border-color: var(--accent-color);
+        }
+
+        .chat-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20, 8, 0, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            margin-top: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .chat-dropdown.show {
+            display: block;
+        }
+
+        .chat-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.1);
+            font-size: 14px;
+        }
+
+        .chat-option:last-child {
+            border-bottom: none;
+        }
+
+        .chat-option:hover {
+            background: rgba(255, 107, 0, 0.2);
+        }
+
+        .chat-option.active {
+            background: rgba(255, 107, 0, 0.3);
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .new-chat-btn {
+            background: rgba(255, 107, 0, 0.2);
+            border: 1px dashed var(--accent-color);
+            color: var(--accent-color);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .new-chat-form {
+            padding: 15px;
+            background: rgba(20, 8, 0, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            margin: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .new-chat-form.show {
+            display: flex;
+        }
+
+        .new-chat-form input {
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-buttons button {
+            padding: 10px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-buttons button.cancel {
+            background: rgba(255, 68, 68, 0.3);
+            box-shadow: none;
         }
 
         .logout-btn {
@@ -276,9 +400,15 @@
             transform: scale(1.05);
         }
 
-        .header button {
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .header-right button {
             width: auto;
-            padding: 8px 15px;
+            padding: 6px 12px;
             margin: 0;
             background: linear-gradient(135deg, #ff6b00, #ff4500);
             backdrop-filter: blur(8px);
@@ -288,7 +418,7 @@
             font-size: 12px;
         }
 
-        .header button:hover {
+        .header-right button:hover {
             background: linear-gradient(135deg, #ff7b1a, #ff5500);
             transform: none;
         }
@@ -296,27 +426,35 @@
         #messages { 
             flex-grow: 1; 
             overflow-y: auto; 
-            padding: 20px; 
+            padding: 15px; 
             display: flex; 
             flex-direction: column; 
-            gap: 10px;
+            gap: 8px;
         }
 
         .msg-item { 
             background: rgba(30, 15, 0, 0.4);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            padding: 12px 18px; 
+            padding: 10px 15px; 
             border-radius: 18px; 
             max-width: 85%; 
             word-wrap: break-word;
             align-self: flex-start;
             border: 1px solid rgba(255, 107, 0, 0.25);
             border-bottom-left-radius: 4px;
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 69, 0, 0.15);
             animation: fadeIn 0.3s ease;
             color: #ffd0b0;
             border-left: 3px solid #ff6b00;
+            font-size: 14px;
+        }
+
+        .msg-item .msg-time {
+            font-size: 10px;
+            color: rgba(255, 176, 138, 0.5);
+            margin-top: 4px;
+            text-align: right;
         }
 
         @keyframes fadeIn {
@@ -325,12 +463,12 @@
         }
 
         .input-area {
-            padding: 15px 20px;
+            padding: 12px 15px;
             background: rgba(20, 8, 0, 0.4);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             border-top: 1px solid var(--glass-border);
         }
@@ -340,9 +478,10 @@
             flex-grow: 1;
             background: rgba(20, 8, 0, 0.5);
             border-radius: 25px;
-            padding: 12px 18px;
+            padding: 10px 15px;
             border: 1px solid rgba(255, 107, 0, 0.2);
             color: #ffb08a;
+            font-size: 14px;
         }
 
         #msgInput:focus {
@@ -356,21 +495,20 @@
 
         .send-btn { 
             width: auto; 
-            padding: 12px 22px; 
+            padding: 10px 18px; 
             margin: 0;
             border-radius: 25px;
-            font-size: 18px;
+            font-size: 16px;
             background: linear-gradient(135deg, #ff6b00, #ff4500);
             border: 1px solid rgba(255, 140, 64, 0.4);
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+            box-shadow: 0 4px 12px rgba(255, 69, 0, 0.4);
         }
 
         .status-badge {
-            font-size: 12px;
-            padding: 4px 8px;
+            font-size: 11px;
+            padding: 3px 8px;
             border-radius: 12px;
             background: rgba(20, 8, 0, 0.6);
-            margin-left: 10px;
         }
 
         .status-connected {
@@ -379,6 +517,31 @@
 
         .status-error {
             color: #ff8888;
+        }
+
+        .empty-chat {
+            text-align: center;
+            color: rgba(255, 176, 138, 0.5);
+            padding: 30px;
+            font-style: italic;
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 8, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 107, 0, 0.5);
         }
     </style>
 </head>
@@ -398,7 +561,7 @@
         <div id="login-form" class="auth-form active">
             <div class="auth-title">🌋 MAGMA 🌋</div>
             <div class="input-group">
-                <input type="text" id="login-username" placeholder="ник">
+                <input type="text" id="login-username" placeholder="ник" autocomplete="off">
             </div>
             <div class="input-group">
                 <input type="password" id="login-password" placeholder="пароль">
@@ -411,7 +574,7 @@
         <div id="register-form" class="auth-form">
             <div class="auth-title">🌋 РЕГИСТРАЦИЯ 🌋</div>
             <div class="input-group">
-                <input type="text" id="register-username" placeholder="ник">
+                <input type="text" id="register-username" placeholder="ник" autocomplete="off">
             </div>
             <div class="input-group">
                 <input type="password" id="register-password" placeholder="пароль">
@@ -429,15 +592,35 @@
         <div class="header">
             <div class="header-left">
                 <span id="display-name"></span>
+                <div class="chat-selector" id="chatSelector">
+                    <div class="selected-chat" onclick="toggleChatDropdown()">
+                        <span id="selectedChatName">Выберите чат</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="chat-dropdown" id="chatDropdown">
+                        <div class="chat-option new-chat-btn" onclick="showNewChatForm()">
+                            ➕ Создать новый чат
+                        </div>
+                        <div id="chatList"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
                 <div id="sound-toggle" class="sound-toggle" onclick="toggleSound()">
                     <span class="sound-indicator">🔊</span>
-                    <span>Звук</span>
                 </div>
-                <span id="connection-status" class="status-badge">🌋 проверка...</span>
+                <button onclick="loadMessages(true)">🔄</button>
+                <div class="logout-btn" onclick="logout()">🚪</div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="loadMessages(true)">Обновить</button>
-                <div class="logout-btn" onclick="logout()">🚪 Выйти</div>
+        </div>
+
+        <!-- Форма создания нового чата -->
+        <div id="newChatForm" class="new-chat-form">
+            <input type="text" id="newChatName" placeholder="Название чата" autocomplete="off">
+            <textarea id="newChatDescription" placeholder="Описание чата (необязательно)"></textarea>
+            <div class="form-buttons">
+                <button onclick="createNewChat()">Создать</button>
+                <button class="cancel" onclick="hideNewChatForm()">Отмена</button>
             </div>
         </div>
         
@@ -452,27 +635,28 @@
 
 <script>
     // ==================== НАСТРОЙКИ GITHUB ====================
-    // Токен для доступа к Gist (разбит для безопасности)
     const GITHUB_TOKEN = 'ghp_5GhNw2IFw' + 'SNBiCarLnNWF6' + 'zMHi4hNW4LgR4N';
     
-    // ID Gist для хранения сообщений чата
-    const CHAT_GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740';
+    // ID Gist для хранения пользователей (предоставлен вами)
+    const USERS_GIST_ID = 'd0ff1e8a01417e7931279eb563198dba';
     
-    // ID Gist для хранения пользователей (нужно создать новый Gist и указать его ID)
-    // Инструкция: создайте новый Gist на gist.github.com с файлом users.json (пустой массив [])
-    const USERS_GIST_ID = 'd0ff1e8a01417e7931279eb563198dba'; // ЗАМЕНИТЕ НА РЕАЛЬНЫЙ ID
+    // ID Gist для хранения информации о чатах (нужно создать новый)
+    const CHATS_GIST_ID = 'fede0c7a21137995fcca81d27951563d'; // Создайте новый Gist и укажите ID
     
-    const CHAT_FILE = 'chat.txt';
     const USERS_FILE = 'users.json';
+    const CHATS_FILE = 'chats.json';
 
     // ==================== ПЕРЕМЕННЫЕ ====================
     let currentUser = '';
     let currentSeed = '';
+    let currentChatId = null;
+    let currentChatName = '';
     let autoUpdateInterval = null;
     let displayedMessages = new Set();
     let isGitHubWorking = false;
     let soundEnabled = true;
     let notificationSound = null;
+    let chats = [];
 
     // Инициализация звука
     try {
@@ -484,7 +668,6 @@
 
     // ==================== ФУНКЦИИ АВТОРИЗАЦИИ ====================
     
-    // Переключение между вкладками
     function switchAuthTab(tab) {
         const tabs = document.querySelectorAll('.auth-tab');
         const forms = document.querySelectorAll('.auth-form');
@@ -501,12 +684,11 @@
         }
     }
 
-    // Хеширование пароля SHA-256
     function hashPassword(password) {
         return CryptoJS.SHA256(password).toString();
     }
 
-    // Загрузка пользователей из отдельного Gist
+    // Загрузка пользователей
     async function loadUsers() {
         try {
             const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
@@ -523,7 +705,6 @@
             const data = await response.json();
             
             if (!data.files || !data.files[USERS_FILE]) {
-                // Если файл не существует, создаем пустой массив
                 await initializeUsersGist();
                 return [];
             }
@@ -535,7 +716,6 @@
         }
     }
 
-    // Инициализация Gist с пользователями
     async function initializeUsersGist() {
         try {
             await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
@@ -557,7 +737,6 @@
         }
     }
 
-    // Сохранение пользователей в отдельный Gist
     async function saveUsers(users) {
         try {
             const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
@@ -573,27 +752,198 @@
                 })
             });
             
-            if (!response.ok) {
-                const error = await response.json();
-                console.error('Ошибка сохранения:', error);
-                return false;
-            }
-            
-            return true;
+            return response.ok;
         } catch (err) {
             console.error('Ошибка сохранения пользователей:', err);
             return false;
         }
     }
 
-    // Регистрация
+    // ==================== ФУНКЦИИ УПРАВЛЕНИЯ ЧАТАМИ ====================
+
+    async function loadChats() {
+        try {
+            const response = await fetch(`https://api.github.com/gists/${CHATS_GIST_ID}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
+            });
+            
+            if (!response.ok) {
+                console.log('Ошибка загрузки чатов:', response.status);
+                return [];
+            }
+            
+            const data = await response.json();
+            
+            if (!data.files || !data.files[CHATS_FILE]) {
+                await initializeChatsGist();
+                return [];
+            }
+            
+            chats = JSON.parse(data.files[CHATS_FILE].content || '[]');
+            updateChatList();
+            return chats;
+        } catch (err) {
+            console.error('Ошибка загрузки чатов:', err);
+            return [];
+        }
+    }
+
+    async function initializeChatsGist() {
+        try {
+            await fetch(`https://api.github.com/gists/${CHATS_GIST_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: { 
+                        [CHATS_FILE]: { content: '[]' }
+                    }
+                })
+            });
+            return true;
+        } catch (err) {
+            console.error('Ошибка инициализации Gist чатов:', err);
+            return false;
+        }
+    }
+
+    async function saveChats() {
+        try {
+            const response = await fetch(`https://api.github.com/gists/${CHATS_GIST_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: { 
+                        [CHATS_FILE]: { content: JSON.stringify(chats, null, 2) }
+                    }
+                })
+            });
+            
+            return response.ok;
+        } catch (err) {
+            console.error('Ошибка сохранения чатов:', err);
+            return false;
+        }
+    }
+
+    function updateChatList() {
+        const chatList = document.getElementById('chatList');
+        chatList.innerHTML = '';
+        
+        chats.forEach(chat => {
+            const option = document.createElement('div');
+            option.className = `chat-option ${chat.id === currentChatId ? 'active' : ''}`;
+            option.textContent = chat.name;
+            option.onclick = () => switchChat(chat.id, chat.name, chat.gistId);
+            chatList.appendChild(option);
+        });
+    }
+
+    function toggleChatDropdown() {
+        document.getElementById('chatDropdown').classList.toggle('show');
+    }
+
+    function showNewChatForm() {
+        document.getElementById('chatDropdown').classList.remove('show');
+        document.getElementById('newChatForm').classList.add('show');
+    }
+
+    function hideNewChatForm() {
+        document.getElementById('newChatForm').classList.remove('show');
+        document.getElementById('newChatName').value = '';
+        document.getElementById('newChatDescription').value = '';
+    }
+
+    async function createNewChat() {
+        const chatName = document.getElementById('newChatName').value.trim();
+        const chatDescription = document.getElementById('newChatDescription').value.trim();
+        
+        if (!chatName) {
+            alert('Введите название чата');
+            return;
+        }
+
+        try {
+            // Создаем новый Gist для чата
+            const createResp = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description: chatDescription || `Чат ${chatName}`,
+                    public: false,
+                    files: {
+                        'messages.txt': { content: '' }
+                    }
+                })
+            });
+
+            if (!createResp.ok) {
+                throw new Error('Не удалось создать Gist для чата');
+            }
+
+            const gistData = await createResp.json();
+            
+            const newChat = {
+                id: Date.now().toString(),
+                name: chatName,
+                description: chatDescription,
+                gistId: gistData.id,
+                createdBy: currentUser,
+                createdAt: new Date().toISOString(),
+                members: [currentUser]
+            };
+
+            chats.push(newChat);
+            await saveChats();
+            
+            updateChatList();
+            hideNewChatForm();
+            
+            // Переключаемся на новый чат
+            await switchChat(newChat.id, newChat.name, newChat.gistId);
+            
+        } catch (err) {
+            console.error('Ошибка создания чата:', err);
+            alert('Ошибка при создании чата');
+        }
+    }
+
+    async function switchChat(chatId, chatName, gistId) {
+        currentChatId = chatId;
+        currentChatName = chatName;
+        
+        document.getElementById('selectedChatName').textContent = chatName;
+        document.getElementById('chatDropdown').classList.remove('show');
+        
+        // Обновляем активный класс в списке
+        updateChatList();
+        
+        // Очищаем сообщения и загружаем новые
+        displayedMessages.clear();
+        document.getElementById('messages').innerHTML = '';
+        
+        // Загружаем сообщения из нового Gist
+        await loadMessages(true);
+    }
+
+    // ==================== ФУНКЦИИ ВХОДА/РЕГИСТРАЦИИ ====================
+
     async function register() {
         const username = document.getElementById('register-username').value.trim();
         const password = document.getElementById('register-password').value.trim();
         const confirm = document.getElementById('register-confirm').value.trim();
         const messageEl = document.getElementById('register-message');
 
-        // Проверка заполнения полей
         if (!username || !password || !confirm) {
             messageEl.textContent = 'Заполните все поля';
             return;
@@ -609,7 +959,6 @@
             return;
         }
 
-        // Проверка существования пользователя
         const users = await loadUsers();
         
         if (users.some(u => u.username === username)) {
@@ -617,7 +966,6 @@
             return;
         }
 
-        // Хеширование и сохранение
         const hashedPassword = hashPassword(password);
         users.push({
             username: username,
@@ -631,12 +979,10 @@
             messageEl.className = 'success-message';
             messageEl.textContent = '✅ Регистрация успешна! Теперь войдите.';
             
-            // Очистка полей
             document.getElementById('register-username').value = '';
             document.getElementById('register-password').value = '';
             document.getElementById('register-confirm').value = '';
             
-            // Переключение на вкладку входа через 1.5 секунды
             setTimeout(() => {
                 switchAuthTab('login');
                 messageEl.textContent = '';
@@ -648,7 +994,6 @@
         }
     }
 
-    // Вход
     async function login() {
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value.trim();
@@ -665,7 +1010,7 @@
 
         if (user) {
             currentUser = username;
-            currentSeed = hashedPassword; // Используем хеш как сид для шифрования чата
+            currentSeed = hashedPassword;
             
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
@@ -673,16 +1018,25 @@
             
             loadSoundSetting();
             
+            // Загружаем список чатов
+            await loadChats();
+            
             checkGitHubConnection().then(connected => {
                 if (connected) {
-                    displayedMessages.clear();
-                    loadMessages(true);
+                    if (chats.length > 0) {
+                        // Переключаемся на первый чат
+                        switchChat(chats[0].id, chats[0].name, chats[0].gistId);
+                    }
                     
                     if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                    autoUpdateInterval = setInterval(() => loadMessages(false), 3000);
+                    autoUpdateInterval = setInterval(() => {
+                        if (currentChatId) {
+                            loadMessages(false);
+                        }
+                    }, 3000);
                 } else {
                     const msgDiv = document.getElementById('messages');
-                    msgDiv.innerHTML = '<div class="error-message">🌋 Ошибка подключения к чату<br><small>Проверьте подключение</small></div>';
+                    msgDiv.innerHTML = '<div class="error-message">🌋 Ошибка подключения</div>';
                 }
             });
         } else {
@@ -690,7 +1044,6 @@
         }
     }
 
-    // Выход
     function logout() {
         document.getElementById('chat-screen').style.display = 'none';
         document.getElementById('auth-screen').style.display = 'flex';
@@ -698,6 +1051,9 @@
         document.getElementById('login-username').value = '';
         document.getElementById('login-password').value = '';
         document.getElementById('login-message').textContent = '';
+        
+        currentChatId = null;
+        currentChatName = '';
         
         if (autoUpdateInterval) {
             clearInterval(autoUpdateInterval);
@@ -712,13 +1068,8 @@
         const soundToggle = document.getElementById('sound-toggle');
         const indicator = soundToggle.querySelector('.sound-indicator');
         
-        if (soundEnabled) {
-            indicator.textContent = '🔊';
-            soundToggle.classList.remove('off');
-        } else {
-            indicator.textContent = '🔈';
-            soundToggle.classList.add('off');
-        }
+        indicator.textContent = soundEnabled ? '🔊' : '🔈';
+        soundToggle.classList.toggle('off', !soundEnabled);
         
         localStorage.setItem('magmaSoundEnabled', soundEnabled);
     }
@@ -730,13 +1081,8 @@
             const soundToggle = document.getElementById('sound-toggle');
             const indicator = soundToggle.querySelector('.sound-indicator');
             
-            if (soundEnabled) {
-                indicator.textContent = '🔊';
-                soundToggle.classList.remove('off');
-            } else {
-                indicator.textContent = '🔈';
-                soundToggle.classList.add('off');
-            }
+            indicator.textContent = soundEnabled ? '🔊' : '🔈';
+            soundToggle.classList.toggle('off', !soundEnabled);
         }
     }
 
@@ -744,9 +1090,7 @@
         if (!soundEnabled || !notificationSound) return;
         
         notificationSound.currentTime = 0;
-        notificationSound.play().catch(e => {
-            console.log('Не удалось воспроизвести звук:', e);
-        });
+        notificationSound.play().catch(e => console.log('Не удалось воспроизвести звук:', e));
     }
 
     async function checkGitHubConnection() {
@@ -754,7 +1098,7 @@
         if (!statusEl) return;
         
         try {
-            const response = await fetch(`https://api.github.com/gists/${CHAT_GIST_ID}`, {
+            const response = await fetch(`https://api.github.com/gists/${CHATS_GIST_ID}`, {
                 headers: {
                     'Authorization': `token ${GITHUB_TOKEN}`
                 }
@@ -769,7 +1113,7 @@
                 document.querySelector('.send-btn').disabled = false;
                 return true;
             } else {
-                statusEl.innerHTML = '🌋 ошибка';
+                statusEl.innerHTML = '🌋 error';
                 statusEl.className = 'status-badge status-error';
                 isGitHubWorking = false;
                 
@@ -778,7 +1122,7 @@
                 return false;
             }
         } catch (err) {
-            statusEl.innerHTML = '🌋 нет соединения';
+            statusEl.innerHTML = '🌋 no connection';
             statusEl.className = 'status-badge status-error';
             isGitHubWorking = false;
             
@@ -795,12 +1139,15 @@
     });
 
     async function loadMessages(forceReload = false) {
-        if (!isGitHubWorking) return;
+        if (!isGitHubWorking || !currentChatId) return;
+        
+        const currentChat = chats.find(c => c.id === currentChatId);
+        if (!currentChat) return;
         
         const msgDiv = document.getElementById('messages');
         
         try {
-            const response = await fetch(`https://api.github.com/gists/${CHAT_GIST_ID}`, {
+            const response = await fetch(`https://api.github.com/gists/${currentChat.gistId}`, {
                 headers: {
                     'Authorization': `token ${GITHUB_TOKEN}`
                 }
@@ -812,11 +1159,11 @@
             
             const data = await response.json();
             
-            if (!data.files || !data.files[CHAT_FILE]) {
+            if (!data.files || !data.files['messages.txt']) {
                 return;
             }
             
-            const content = data.files[CHAT_FILE].content || '';
+            const content = data.files['messages.txt'].content || '';
             const lines = content.split('\n').filter(line => line.trim());
             
             if (forceReload) {
@@ -825,8 +1172,7 @@
                 
                 for (let line of lines) {
                     try {
-                        const bytes = CryptoJS.AES.decrypt(line, currentSeed);
-                        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                        const decrypted = CryptoJS.AES.decrypt(line, currentSeed).toString(CryptoJS.enc.Utf8);
                         if (decrypted && !displayedMessages.has(decrypted)) {
                             displayedMessages.add(decrypted);
                             msgDiv.innerHTML += `<div class="msg-item">${decrypted}</div>`;
@@ -838,8 +1184,7 @@
                 
                 for (let line of lines) {
                     try {
-                        const bytes = CryptoJS.AES.decrypt(line, currentSeed);
-                        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                        const decrypted = CryptoJS.AES.decrypt(line, currentSeed).toString(CryptoJS.enc.Utf8);
                         if (decrypted && !displayedMessages.has(decrypted)) {
                             displayedMessages.add(decrypted);
                             msgDiv.innerHTML += `<div class="msg-item">${decrypted}</div>`;
@@ -856,6 +1201,10 @@
                 }
             }
             
+            if (msgDiv.children.length === 0) {
+                msgDiv.innerHTML = '<div class="empty-chat">🌋 Нет сообщений. Напишите что-нибудь!</div>';
+            }
+            
             msgDiv.scrollTop = msgDiv.scrollHeight;
             
         } catch (err) {
@@ -867,10 +1216,13 @@
     }
 
     async function sendMessage() {
-        if (!isGitHubWorking) {
-            alert("Нет подключения к чату");
+        if (!isGitHubWorking || !currentChatId) {
+            alert("Нет подключения или не выбран чат");
             return;
         }
+        
+        const currentChat = chats.find(c => c.id === currentChatId);
+        if (!currentChat) return;
         
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
@@ -882,7 +1234,7 @@
         input.value = '';
 
         try {
-            const getResp = await fetch(`https://api.github.com/gists/${CHAT_GIST_ID}`, {
+            const getResp = await fetch(`https://api.github.com/gists/${currentChat.gistId}`, {
                 headers: {
                     'Authorization': `token ${GITHUB_TOKEN}`
                 }
@@ -893,17 +1245,17 @@
             }
             
             const getData = await getResp.json();
-            const oldContent = getData.files[CHAT_FILE]?.content || '';
+            const oldContent = getData.files['messages.txt']?.content || '';
             const newContent = oldContent + (oldContent ? '\n' : '') + encrypted;
 
-            const patchResp = await fetch(`https://api.github.com/gists/${CHAT_GIST_ID}`, {
+            const patchResp = await fetch(`https://api.github.com/gists/${currentChat.gistId}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `token ${GITHUB_TOKEN}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    files: { [CHAT_FILE]: { content: newContent } }
+                    files: { 'messages.txt': { content: newContent } }
                 })
             });
             
@@ -914,6 +1266,12 @@
             if (!displayedMessages.has(fullMessage)) {
                 displayedMessages.add(fullMessage);
                 const msgDiv = document.getElementById('messages');
+                
+                // Убираем пустое сообщение если оно есть
+                if (msgDiv.children.length === 1 && msgDiv.children[0].classList.contains('empty-chat')) {
+                    msgDiv.innerHTML = '';
+                }
+                
                 msgDiv.innerHTML += `<div class="msg-item">${fullMessage}</div>`;
                 msgDiv.scrollTop = msgDiv.scrollHeight;
             }
@@ -932,18 +1290,18 @@
     let mouseX = 0, mouseY = 0;
     let mouseActive = false;
 
-    const PARTICLE_COUNT = 80;
-    const CONNECT_DISTANCE = 170;
-    const MOUSE_RADIUS = 150;
+    const PARTICLE_COUNT = 60;
+    const CONNECT_DISTANCE = 150;
+    const MOUSE_RADIUS = 120;
 
     class Particle {
         constructor() {
             this.x = Math.random() * width;
             this.y = Math.random() * height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.radius = 2 + Math.random() * 3;
-            this.opacity = 0.5 + Math.random() * 0.5;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.radius = 1.5 + Math.random() * 2;
+            this.opacity = 0.4 + Math.random() * 0.4;
             this.color = `rgba(255, ${100 + Math.random() * 100}, 0, ${this.opacity})`;
         }
 
@@ -959,7 +1317,7 @@
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fillStyle = this.color;
             ctx.shadowColor = '#ff6b00';
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 10;
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -980,10 +1338,10 @@
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < CONNECT_DISTANCE) {
-                    const opacity = 0.2 * (1 - distance / CONNECT_DISTANCE);
+                    const opacity = 0.15 * (1 - distance / CONNECT_DISTANCE);
                     ctx.beginPath();
                     ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = 0.8;
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
                     ctx.stroke();
@@ -1000,7 +1358,7 @@
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < MOUSE_RADIUS) {
                 const angle = Math.atan2(dy, dx);
-                const force = (MOUSE_RADIUS - distance) / MOUSE_RADIUS * 2.5;
+                const force = (MOUSE_RADIUS - distance) / MOUSE_RADIUS * 2;
                 particle.x += Math.cos(angle) * force;
                 particle.y += Math.sin(angle) * force;
             }
@@ -1026,6 +1384,7 @@
         initParticles();
     }
 
+    // События
     canvas.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
@@ -1045,6 +1404,16 @@
 
     canvas.addEventListener('touchend', () => {
         mouseActive = false;
+    });
+
+    // Закрытие дропдауна при клике вне
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('chatDropdown');
+        const selector = document.querySelector('.selected-chat');
+        
+        if (!selector.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
     });
 
     window.addEventListener('resize', resizeCanvas);
