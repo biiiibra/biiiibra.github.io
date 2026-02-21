@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌋 MAGMA 🌋</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0a0500;
+            --container-bg: rgba(30, 15, 0, 0.25);
+            --accent-color: #ff6b00;
+            --accent-glow: #ff4500;
+            --text-color: #ffb08a;
+            --border-color: rgba(255, 107, 0, 0.3);
+            --glass-border: rgba(255, 107, 0, 0.2);
+            --glass-shadow: 0 8px 32px rgba(255, 60, 0, 0.3);
+            --error-color: #ff4444;
+            --particle-color: #ff6b00;
+            --sound-on-color: #ff6b00;
+            --sound-off-color: #888;
+        }
+
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; 
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container { 
+            width: 90%;
+            max-width: 480px;
+            background: var(--container-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 80vh;
+            max-height: 700px;
+        }
+
+        #login-screen {
+            padding: 40px 30px;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        #login-screen h2 {
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(255, 107, 0, 0.7);
+            letter-spacing: 4px;
+            color: #ff8c40;
+            font-weight: bold;
+            position: relative;
+        }
+
+        #login-screen h2::after {
+            content: "🌋";
+            position: absolute;
+            right: -40px;
+            top: 0;
+            font-size: 0.8em;
+            filter: drop-shadow(0 0 8px #ff6b00);
+        }
+
+        #login-screen h2::before {
+            content: "🌋";
+            position: absolute;
+            left: -40px;
+            top: 0;
+            font-size: 0.8em;
+            filter: drop-shadow(0 0 8px #ff6b00);
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 16px 18px; 
+            background: rgba(20, 10, 0, 0.5);
+            border: 1px solid var(--border-color); 
+            color: #ffb08a; 
+            border-radius: 20px; 
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        input:focus { 
+            border-color: var(--accent-color);
+            background: rgba(40, 20, 0, 0.6);
+            box-shadow: 0 0 25px rgba(255, 107, 0, 0.4);
+            color: white;
+        }
+
+        input::placeholder {
+            color: rgba(255, 140, 64, 0.5);
+        }
+
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #ff6b00, #ff4500);
+            color: white; 
+            border: none; 
+            border-radius: 20px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 140, 64, 0.3);
+            text-transform: uppercase;
+        }
+
+        button:hover { 
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 69, 0, 0.7);
+            background: linear-gradient(135deg, #ff7b1a, #ff5500);
+        }
+
+        button:active { 
+            opacity: 0.7;
+            transform: translateY(0);
+        }
+
+        #chat-screen { 
+            display: none; 
+            flex-direction: column; 
+            height: 100%;
+            width: 100%;
+        }
+
+        .header {
+            padding: 15px 20px;
+            background: rgba(20, 8, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #display-name {
+            font-size: 1.2em;
+            background: rgba(255, 107, 0, 0.15);
+            padding: 8px 15px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            backdrop-filter: blur(4px);
+            color: #ffb08a;
+            font-weight: bold;
+        }
+
+        .sound-toggle {
+            background: rgba(20, 8, 0, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            color: var(--sound-on-color);
+        }
+
+        .sound-toggle.off {
+            color: var(--sound-off-color);
+            opacity: 0.7;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(40, 16, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        .header button {
+            width: auto;
+            padding: 8px 15px;
+            margin: 0;
+            background: linear-gradient(135deg, #ff6b00, #ff4500);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            box-shadow: none;
+            font-size: 12px;
+        }
+
+        .header button:hover {
+            background: linear-gradient(135deg, #ff7b1a, #ff5500);
+            transform: none;
+        }
+
+        #messages { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
+        }
+
+        .msg-item { 
+            background: rgba(30, 15, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 12px 18px; 
+            border-radius: 18px; 
+            max-width: 85%; 
+            word-wrap: break-word;
+            align-self: flex-start;
+            border: 1px solid rgba(255, 107, 0, 0.25);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+            color: #ffd0b0;
+            border-left: 3px solid #ff6b00;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.15);
+            border: 1px solid var(--error-color);
+            color: #ff8888;
+            text-align: center;
+            padding: 20px;
+            border-radius: 18px;
+            margin: 10px;
+            border-left: 3px solid #ff4444;
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            background: rgba(20, 8, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        #msgInput { 
+            margin: 0; 
+            flex-grow: 1;
+            background: rgba(20, 8, 0, 0.5);
+            border-radius: 25px;
+            padding: 12px 18px;
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            color: #ffb08a;
+        }
+
+        #msgInput:focus {
+            background: rgba(40, 16, 0, 0.6);
+            border-color: #ff6b00;
+        }
+
+        #msgInput::placeholder {
+            color: rgba(255, 140, 64, 0.4);
+        }
+
+        .send-btn { 
+            width: auto; 
+            padding: 12px 22px; 
+            margin: 0;
+            border-radius: 25px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #ff6b00, #ff4500);
+            border: 1px solid rgba(255, 140, 64, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+        }
+
+        .status-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(20, 8, 0, 0.6);
+            margin-left: 10px;
+        }
+
+        .status-connected {
+            color: #ff8c40;
+        }
+
+        .status-error {
+            color: #ff8888;
+        }
+
+        /* Индикатор звука */
+        .sound-indicator {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<div class="container">
+    <div id="login-screen">
+        <h2>MAGMA</h2>
+        <div class="input-group">
+            <input type="text" id="userName" placeholder="имя">
+        </div>
+        <div class="input-group">
+            <input type="password" id="seedPhrase" placeholder="сид чата">
+        </div>
+        <button onclick="enterChat()">Войти в чат</button>
+        <div style="margin-top: 20px; font-size: 12px; color: rgba(255, 140, 64, 0.6); text-align: center;">
+            🌋 MAGMA CHAT 🌋
+        </div>
+    </div>
+
+    <div id="chat-screen">
+        <div class="header">
+            <div class="header-left">
+                <span id="display-name"></span>
+                <div id="sound-toggle" class="sound-toggle" onclick="toggleSound()">
+                    <span class="sound-indicator">🔊</span>
+                    <span>Звук</span>
+                </div>
+                <span id="connection-status" class="status-badge">🌋 проверка...</span>
+            </div>
+            <button onclick="loadMessages(true)">Обновить</button>
+        </div>
+        
+        <div id="messages"></div>
+
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off" disabled>
+            <button class="send-btn" onclick="sendMessage()" disabled>➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== НАСТРОЙКИ GITHUB ====================
+    const GITHUB_TOKEN = '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';
+    const GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740';
+    const FILE_NAME = 'chat.txt';
+
+    // ==================== ПЕРЕМЕННЫЕ ЧАТА ====================
+    let currentUser = '';
+    let currentSeed = '';
+    let autoUpdateInterval = null;
+    let displayedMessages = new Set();
+    let isGitHubWorking = false;
+    
+    // ==================== ПЕРЕМЕННЫЕ ЗВУКА ====================
+    let soundEnabled = true;
+    let notificationSound = null;
+    let lastMessageCount = 0;
+
+    // Инициализация звука
+    try {
+        notificationSound = new Audio('message.wav');
+        notificationSound.volume = 0.5;
+    } catch (e) {
+        console.log('Ошибка загрузки звука:', e);
+    }
+
+    // Функция переключения звука
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        const soundToggle = document.getElementById('sound-toggle');
+        const indicator = soundToggle.querySelector('.sound-indicator');
+        
+        if (soundEnabled) {
+            indicator.textContent = '🔊';
+            soundToggle.classList.remove('off');
+        } else {
+            indicator.textContent = '🔈';
+            soundToggle.classList.add('off');
+        }
+        
+        // Сохраняем настройку в localStorage
+        localStorage.setItem('magmaSoundEnabled', soundEnabled);
+    }
+
+    // Загрузка настройки звука
+    function loadSoundSetting() {
+        const saved = localStorage.getItem('magmaSoundEnabled');
+        if (saved !== null) {
+            soundEnabled = saved === 'true';
+            const soundToggle = document.getElementById('sound-toggle');
+            const indicator = soundToggle.querySelector('.sound-indicator');
+            
+            if (soundEnabled) {
+                indicator.textContent = '🔊';
+                soundToggle.classList.remove('off');
+            } else {
+                indicator.textContent = '🔈';
+                soundToggle.classList.add('off');
+            }
+        }
+    }
+
+    // Воспроизведение звука уведомления
+    function playNotificationSound() {
+        if (!soundEnabled || !notificationSound) return;
+        
+        // Сбрасываем звук, чтобы можно было воспроизвести снова
+        notificationSound.currentTime = 0;
+        
+        // Пытаемся воспроизвести (может быть заблокировано браузером)
+        notificationSound.play().catch(e => {
+            console.log('Не удалось воспроизвести звук:', e);
+        });
+    }
+
+    // ==================== ПРОВЕРКА СОЕДИНЕНИЯ ====================
+    async function checkGitHubConnection() {
+        const statusEl = document.getElementById('connection-status');
+        if (!statusEl) return;
+        
+        try {
+            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
+            });
+            
+            if (response.ok) {
+                statusEl.innerHTML = '🌋 connected';
+                statusEl.className = 'status-badge status-connected';
+                isGitHubWorking = true;
+                
+                document.getElementById('msgInput').disabled = false;
+                document.querySelector('.send-btn').disabled = false;
+                return true;
+            } else {
+                const error = await response.json();
+                statusEl.innerHTML = `🌋 ошибка: ${error.message || 'доступ запрещен'}`;
+                statusEl.className = 'status-badge status-error';
+                isGitHubWorking = false;
+                
+                document.getElementById('msgInput').disabled = true;
+                document.querySelector('.send-btn').disabled = true;
+                return false;
+            }
+        } catch (err) {
+            statusEl.innerHTML = '🌋 нет соединения';
+            statusEl.className = 'status-badge status-error';
+            isGitHubWorking = false;
+            
+            document.getElementById('msgInput').disabled = true;
+            document.querySelector('.send-btn').disabled = true;
+            return false;
+        }
+    }
+
+    // ==================== ВХОД В ЧАТ ====================
+    function enterChat() {
+        currentUser = document.getElementById('userName').value.trim();
+        currentSeed = document.getElementById('seedPhrase').value.trim();
+
+        if (!currentUser || !currentSeed) return alert("Введите данные!");
+
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('chat-screen').style.display = 'flex';
+        document.getElementById('display-name').innerText = currentUser;
+        
+        // Загружаем настройку звука
+        loadSoundSetting();
+        
+        checkGitHubConnection().then(connected => {
+            if (connected) {
+                displayedMessages.clear();
+                lastMessageCount = 0;
+                loadMessages(true);
+                
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                autoUpdateInterval = setInterval(() => loadMessages(false), 3000);
+            } else {
+                const msgDiv = document.getElementById('messages');
+                msgDiv.innerHTML = '<div class="error-message">🌋 Ошибка подключения к MAGMA<br><small>Проверьте токен и Gist ID</small></div>';
+            }
+        });
+    }
+
+    document.getElementById('msgInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // ==================== ЗАГРУЗКА СООБЩЕНИЙ ====================
+    async function loadMessages(forceReload = false) {
+        if (!isGitHubWorking) return;
+        
+        const msgDiv = document.getElementById('messages');
+        const previousCount = displayedMessages.size;
+        
+        try {
+            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.files || !data.files[FILE_NAME]) {
+                await createGistFile();
+                return;
+            }
+            
+            const content = data.files[FILE_NAME].content || '';
+            const lines = content.split('\n').filter(line => line.trim());
+            
+            if (forceReload) {
+                msgDiv.innerHTML = '';
+                displayedMessages.clear();
+                
+                for (let line of lines) {
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(line, currentSeed);
+                        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                        if (decrypted && !displayedMessages.has(decrypted)) {
+                            displayedMessages.add(decrypted);
+                            msgDiv.innerHTML += `<div class="msg-item">${decrypted}</div>`;
+                        }
+                    } catch (e) {}
+                }
+            } else {
+                let newMessagesCount = 0;
+                
+                for (let line of lines) {
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(line, currentSeed);
+                        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                        if (decrypted && !displayedMessages.has(decrypted)) {
+                            displayedMessages.add(decrypted);
+                            msgDiv.innerHTML += `<div class="msg-item">${decrypted}</div>`;
+                            newMessagesCount++;
+                        }
+                    } catch (e) {}
+                }
+                
+                // Воспроизводим звук для новых сообщений (не своих)
+                if (newMessagesCount > 0) {
+                    // Проверяем, что последнее сообщение не от текущего пользователя
+                    const lastMessage = Array.from(displayedMessages).pop();
+                    if (lastMessage && !lastMessage.startsWith(currentUser + ':')) {
+                        playNotificationSound();
+                    }
+                }
+            }
+            
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+            
+        } catch (err) {
+            console.error('Ошибка загрузки:', err);
+            if (forceReload) {
+                msgDiv.innerHTML = `<div class="error-message">🌋 Ошибка загрузки: ${err.message}<br><small>Проверьте подключение</small></div>`;
+            }
+            await checkGitHubConnection();
+        }
+    }
+
+    async function createGistFile() {
+        try {
+            await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: { 
+                        [FILE_NAME]: { content: '' }
+                    }
+                })
+            });
+            loadMessages(true);
+        } catch (err) {
+            console.error('Ошибка создания файла:', err);
+        }
+    }
+
+    async function sendMessage() {
+        if (!isGitHubWorking) {
+            alert("Нет подключения к MAGMA");
+            return;
+        }
+        
+        const input = document.getElementById('msgInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const fullMessage = `${currentUser}: ${text}`;
+        const encrypted = CryptoJS.AES.encrypt(fullMessage, currentSeed).toString();
+
+        input.value = '';
+
+        try {
+            const getResp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
+            });
+            
+            if (!getResp.ok) {
+                throw new Error('Не удалось получить Gist');
+            }
+            
+            const getData = await getResp.json();
+            const oldContent = getData.files[FILE_NAME]?.content || '';
+            const newContent = oldContent + (oldContent ? '\n' : '') + encrypted;
+
+            const patchResp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: { [FILE_NAME]: { content: newContent } }
+                })
+            });
+            
+            if (!patchResp.ok) {
+                throw new Error('Не удалось обновить Gist');
+            }
+            
+            if (!displayedMessages.has(fullMessage)) {
+                displayedMessages.add(fullMessage);
+                const msgDiv = document.getElementById('messages');
+                msgDiv.innerHTML += `<div class="msg-item">${fullMessage}</div>`;
+                msgDiv.scrollTop = msgDiv.scrollHeight;
+            }
+            
+        } catch (err) {
+            console.error('Ошибка отправки:', err);
+            alert(`Ошибка отправки: ${err.message}`);
+            await checkGitHubConnection();
+        }
+    }
+
+    // ==================== ЧАСТИЦЫ ====================
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    let mouseX = 0, mouseY = 0;
+    let mouseActive = false;
+
+    const PARTICLE_COUNT = 80;
+    const CONNECT_DISTANCE = 170;
+    const MOUSE_RADIUS = 150;
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = 2 + Math.random() * 3;
+            this.opacity = 0.5 + Math.random() * 0.5;
+            this.color = `rgba(255, ${100 + Math.random() * 100}, 0, ${this.opacity})`;
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.shadowColor = '#ff6b00';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function drawLines() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < CONNECT_DISTANCE) {
+                    const opacity = 0.2 * (1 - distance / CONNECT_DISTANCE);
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function handleMouseInteraction() {
+        if (!mouseActive) return;
+        for (let particle of particles) {
+            const dx = particle.x - mouseX;
+            const dy = particle.y - mouseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < MOUSE_RADIUS) {
+                const angle = Math.atan2(dy, dx);
+                const force = (MOUSE_RADIUS - distance) / MOUSE_RADIUS * 2.5;
+                particle.x += Math.cos(angle) * force;
+                particle.y += Math.sin(angle) * force;
+            }
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        handleMouseInteraction();
+        particles.forEach(particle => {
+            particle.update();
+            particle.draw();
+        });
+        drawLines();
+        requestAnimationFrame(animate);
+    }
+
+    function resizeCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initParticles();
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        mouseActive = true;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        mouseActive = false;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+        mouseActive = true;
+    });
+
+    canvas.addEventListener('touchend', () => {
+        mouseActive = false;
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    animate();
+
+    window.addEventListener('beforeunload', () => {
+        if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+    });
+</script>
+
+</body>
+</html>
