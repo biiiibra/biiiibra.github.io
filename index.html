@@ -225,6 +225,7 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            flex: 1;
         }
 
         #display-name {
@@ -236,23 +237,26 @@
             backdrop-filter: blur(4px);
             color: #ffb08a;
             font-weight: bold;
+            white-space: nowrap;
         }
 
         .chat-input-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
+            flex: 2;
+            min-width: 200px;
         }
 
         #chatSeed {
-            width: 200px;
+            flex: 1;
             padding: 8px 12px;
             background: rgba(20, 8, 0, 0.6);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             color: #ffb08a;
             font-size: 14px;
+            min-width: 120px;
         }
 
         #chatSeed:focus {
@@ -269,32 +273,33 @@
             margin: 0;
             background: linear-gradient(135deg, #ff6b00, #ff4500);
             font-size: 12px;
+            white-space: nowrap;
         }
 
-        .logout-btn {
-            background: rgba(255, 68, 68, 0.3);
-            border: 1px solid rgba(255, 68, 68, 0.4);
-            padding: 6px 12px;
-            border-radius: 20px;
+        .current-chat {
             font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            color: var(--accent-color);
+            padding: 4px 10px;
+            background: rgba(255, 107, 0, 0.15);
+            border-radius: 20px;
+            white-space: nowrap;
         }
 
-        .logout-btn:hover {
-            background: rgba(255, 68, 68, 0.5);
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .sound-toggle {
             background: rgba(20, 8, 0, 0.6);
             border: 1px solid var(--glass-border);
             border-radius: 30px;
-            padding: 6px 12px;
+            padding: 6px 10px;
             font-size: 14px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
             transition: all 0.2s ease;
             color: var(--sound-on-color);
         }
@@ -309,27 +314,22 @@
             transform: scale(1.05);
         }
 
-        .header-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .header-right button {
+        .refresh-btn, .logout-btn {
             width: auto;
-            padding: 8px 15px;
+            padding: 6px 12px;
             margin: 0;
             background: linear-gradient(135deg, #ff6b00, #ff4500);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
-            box-shadow: none;
             font-size: 12px;
+            border-radius: 20px;
         }
 
-        .header-right button:hover {
-            background: linear-gradient(135deg, #ff7b1a, #ff5500);
-            transform: none;
+        .logout-btn {
+            background: rgba(255, 68, 68, 0.3);
+            border: 1px solid rgba(255, 68, 68, 0.4);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 68, 68, 0.5);
         }
 
         #messages { 
@@ -393,6 +393,11 @@
             color: rgba(255, 140, 64, 0.4);
         }
 
+        #msgInput:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .send-btn { 
             width: auto; 
             padding: 12px 22px; 
@@ -404,12 +409,17 @@
             box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
         }
 
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .status-badge {
-            font-size: 12px;
-            padding: 4px 8px;
+            font-size: 11px;
+            padding: 3px 8px;
             border-radius: 12px;
             background: rgba(20, 8, 0, 0.6);
-            margin-left: 10px;
+            white-space: nowrap;
         }
 
         .status-connected {
@@ -425,15 +435,6 @@
             color: rgba(255, 176, 138, 0.5);
             padding: 30px;
             font-style: italic;
-        }
-
-        .current-chat {
-            font-size: 14px;
-            color: var(--accent-color);
-            margin-left: 10px;
-            padding: 4px 10px;
-            background: rgba(255, 107, 0, 0.15);
-            border-radius: 20px;
         }
     </style>
 </head>
@@ -453,7 +454,7 @@
         <div id="login-form" class="auth-form active">
             <div class="auth-title">🌋 MAGMA 🌋</div>
             <div class="input-group">
-                <input type="text" id="login-username" placeholder="ник">
+                <input type="text" id="login-username" placeholder="ник" autocomplete="off">
             </div>
             <div class="input-group">
                 <input type="password" id="login-password" placeholder="пароль">
@@ -466,7 +467,7 @@
         <div id="register-form" class="auth-form">
             <div class="auth-title">🌋 РЕГИСТРАЦИЯ 🌋</div>
             <div class="input-group">
-                <input type="text" id="register-username" placeholder="ник">
+                <input type="text" id="register-username" placeholder="ник" autocomplete="off">
             </div>
             <div class="input-group">
                 <input type="password" id="register-password" placeholder="пароль">
@@ -486,7 +487,7 @@
                 <span id="display-name"></span>
                 <div class="chat-input-group">
                     <input type="text" id="chatSeed" placeholder="сид чата" autocomplete="off">
-                    <button class="join-chat-btn" onclick="joinChat()">Войти в чат</button>
+                    <button class="join-chat-btn" onclick="joinChat()">Войти</button>
                 </div>
                 <span id="currentChatName" class="current-chat"></span>
             </div>
@@ -494,15 +495,15 @@
                 <div id="sound-toggle" class="sound-toggle" onclick="toggleSound()">
                     <span class="sound-indicator">🔊</span>
                 </div>
-                <button onclick="loadMessages(true)">🔄</button>
-                <div class="logout-btn" onclick="logout()">🚪</div>
+                <button class="refresh-btn" onclick="loadMessages(true)">🔄</button>
+                <button class="logout-btn" onclick="logout()">🚪</button>
             </div>
         </div>
         
         <div id="messages"></div>
 
         <div class="input-area">
-            <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off" disabled>
+            <input type="text" id="msgInput" placeholder="Сначала войдите в чат..." autocomplete="off" disabled>
             <button class="send-btn" onclick="sendMessage()" disabled>➤</button>
         </div>
     </div>
@@ -511,8 +512,8 @@
 <script>
     // ==================== НАСТРОЙКИ GITHUB ====================
     const GITHUB_TOKEN = 'ghp_5GhNw2IFw' + 'SNBiCarLnNWF6' + 'zMHi4hNW4LgR4N';
-    const GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740'; // Gist для сообщений
-    const USERS_GIST_ID = 'd0ff1e8a01417e7931279eb563198dba'; // Ваш Gist для пользователей
+    const GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740';
+    const USERS_GIST_ID = 'd0ff1e8a01417e7931279eb563198dba';
     const FILE_NAME = 'chat.txt';
     const USERS_FILE = 'users.json';
 
@@ -707,15 +708,11 @@
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('display-name').innerText = currentUser;
             document.getElementById('currentChatName').innerText = '';
+            document.getElementById('msgInput').placeholder = 'Введите сид чата и нажмите "Войти"';
             
             loadSoundSetting();
             
-            checkGitHubConnection().then(connected => {
-                if (connected) {
-                    document.getElementById('msgInput').disabled = false;
-                    document.querySelector('.send-btn').disabled = false;
-                }
-            });
+            checkGitHubConnection();
         } else {
             messageEl.textContent = 'Неверный ник или пароль';
         }
@@ -731,6 +728,11 @@
         document.getElementById('login-message').textContent = '';
         document.getElementById('chatSeed').value = '';
         document.getElementById('currentChatName').innerText = '';
+        
+        // Отключаем поле ввода
+        document.getElementById('msgInput').disabled = true;
+        document.querySelector('.send-btn').disabled = true;
+        document.getElementById('msgInput').placeholder = 'Сначала войдите в чат...';
         
         currentChatSeed = '';
         displayedMessages.clear();
@@ -752,7 +754,13 @@
         }
         
         currentChatSeed = seed;
-        document.getElementById('currentChatName').innerText = `Чат: ${seed}`;
+        document.getElementById('currentChatName').innerText = `📁 ${seed}`;
+        
+        // Включаем поле ввода
+        document.getElementById('msgInput').disabled = false;
+        document.querySelector('.send-btn').disabled = false;
+        document.getElementById('msgInput').placeholder = 'Сообщение...';
+        document.getElementById('msgInput').focus();
         
         displayedMessages.clear();
         document.getElementById('messages').innerHTML = '';
@@ -828,6 +836,13 @@
     document.getElementById('msgInput').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             sendMessage();
+        }
+    });
+
+    // Добавляем обработчик Enter для поля сида
+    document.getElementById('chatSeed').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            joinChat();
         }
     });
 
