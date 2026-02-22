@@ -20,6 +20,8 @@
             --particle-color: #ff6b00;
             --sound-on-color: #ff6b00;
             --sound-off-color: #888;
+            --scrollbar-thumb: #ff6b00;
+            --scrollbar-track: rgba(255, 107, 0, 0.1);
         }
 
         body { 
@@ -45,6 +47,53 @@
             pointer-events: none;
         }
 
+        /* Кнопка скачивания */
+        .download-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: linear-gradient(135deg, #ff6b00, #ff4500);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 140, 64, 0.3);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 69, 0, 0.8);
+            background: linear-gradient(135deg, #ff7b1a, #ff5500);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .download-btn i {
+            font-size: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .download-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+
         .container { 
             width: 90%;
             max-width: 480px;
@@ -62,6 +111,45 @@
             transition: all 0.3s ease;
             height: 80vh;
             max-height: 700px;
+        }
+
+        /* КАСТОМНЫЙ ПОЛЗУНОК */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+            margin: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            background-clip: padding-box;
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff8c40;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: #ff4500;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        /* Для Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
 
         /* ЭКРАНЫ АВТОРИЗАЦИИ */
@@ -427,9 +515,33 @@
             padding: 30px;
             font-style: italic;
         }
+
+        /* Стили для WebView */
+        .webview-notice {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(20, 8, 0, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 10px;
+            color: var(--accent-color);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
+
+<!-- Кнопка скачивания для Windows -->
+<a href="https://raw.githubusercontent.com/biiiibra/biiiibra.github.io/refs/heads/main/magma.exe" 
+   class="download-btn" 
+   download="MAGMA_Chat.exe"
+   target="_blank">
+    <span>⬇️</span>
+    <span>Download for Windows</span>
+</a>
 
 <canvas id="particle-canvas"></canvas>
 
@@ -506,6 +618,9 @@
     </div>
 </div>
 
+<!-- Индикатор WebView -->
+<div class="webview-notice" id="webviewNotice">🌋 MAGMA</div>
+
 <script>
     // ==================== НАСТРОЙКИ GITHUB ====================
     const GITHUB_TOKEN = 'ghp_5GhNw2IFw' + 'SNBiCarLnNWF6' + 'zMHi4hNW4LgR4N';
@@ -523,6 +638,15 @@
     let isGitHubWorking = false;
     let soundEnabled = true;
     let notificationSound = null;
+
+    // Определяем, запущено ли в WebView
+    const isWebView = navigator.userAgent.includes('Electron') || 
+                      navigator.userAgent.includes('Python') ||
+                      window.process?.type === 'renderer';
+
+    if (isWebView) {
+        document.getElementById('webviewNotice').style.display = 'block';
+    }
 
     // Инициализация звука
     try {
