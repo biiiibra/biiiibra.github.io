@@ -314,6 +314,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .user-info {
@@ -367,6 +369,7 @@
         .chat-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .icon-btn {
@@ -390,10 +393,43 @@
             transform: scale(1.05);
         }
 
+        /* Стили для чекбокса озвучивания */
+        .voice-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .voice-checkbox:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 0, 0.1);
+        }
+
+        .voice-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .voice-checkbox.active {
+            border-color: var(--primary);
+            background: rgba(255, 107, 0, 0.15);
+        }
+
         .chat-header-bottom {
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .chat-input-group {
@@ -466,6 +502,12 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             color: var(--text-primary);
             line-height: 1.5;
+        }
+
+        .msg-item.own-message {
+            border-left-color: var(--success);
+            align-self: flex-end;
+            background: rgba(68, 255, 136, 0.1);
         }
 
         @keyframes messageIn {
@@ -585,7 +627,6 @@
 </head>
 <body>
 
-
 <!-- Контейнер -->
 <div class="container">
     <!-- ЭКРАН АВТОРИЗАЦИИ -->
@@ -646,6 +687,10 @@
                     <span class="status-text" id="statusText">Подключение...</span>
                 </div>
                 <div class="chat-actions">
+                    <label class="voice-checkbox" id="voiceCheckbox" title="Озвучивать сообщения">
+                        <input type="checkbox" id="voiceToggle" onchange="toggleVoice()">
+                        <span>🔊</span>
+                    </label>
                     <div id="sound-toggle" class="icon-btn" onclick="toggleSound()">
                         <span class="sound-indicator">🔊</span>
                     </div>
@@ -690,9 +735,12 @@
     let messageHashes = new Set();
     let isGitHubWorking = false;
     let soundEnabled = true;
+    let voiceEnabled = false; // Новая переменная для озвучивания
     let notificationSound = null;
     let lastContentHash = '';
     let isUpdating = false;
+    let speechSynthesis = window.speechSynthesis; // Для озвучивания
+    let lastSpokenMessage = ''; // Чтобы не повторять одно и то же
 
     // Создание частиц
     function createParticles() {
@@ -853,6 +901,7 @@
             document.getElementById('display-name').innerText = currentUser;
             
             loadSoundSetting();
+            loadVoiceSetting(); // Загружаем настройку озвучивания
             await checkGitHubConnection();
         } else {
             messageEl.textContent = '❌ Неверный ник или пароль';
@@ -877,6 +926,11 @@
         if (autoUpdateInterval) {
             clearInterval(autoUpdateInterval);
             autoUpdateInterval = null;
+        }
+        
+        // Останавливаем озвучивание
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
         }
     }
 
@@ -966,12 +1020,70 @@
         localStorage.setItem('magmaSoundEnabled', soundEnabled);
     }
 
+    // Новая функция для переключения озвучивания
+    function toggleVoice() {
+        voiceEnabled = document.getElementById('voiceToggle').checked;
+        localStorage.setItem('magmaVoiceEnabled', voiceEnabled);
+        
+        // Обновляем класс для визуального эффекта
+        const checkbox = document.getElementById('voiceCheckbox');
+        if (voiceEnabled) {
+            checkbox.classList.add('active');
+        } else {
+            checkbox.classList.remove('active');
+        }
+    }
+
     function loadSoundSetting() {
         const saved = localStorage.getItem('magmaSoundEnabled');
         if (saved !== null) {
             soundEnabled = saved === 'true';
             document.querySelector('.sound-indicator').textContent = soundEnabled ? '🔊' : '🔈';
         }
+    }
+
+    function loadVoiceSetting() {
+        const saved = localStorage.getItem('magmaVoiceEnabled');
+        if (saved !== null) {
+            voiceEnabled = saved === 'true';
+            document.getElementById('voiceToggle').checked = voiceEnabled;
+            
+            const checkbox = document.getElementById('voiceCheckbox');
+            if (voiceEnabled) {
+                checkbox.classList.add('active');
+            } else {
+                checkbox.classList.remove('active');
+            }
+        }
+    }
+
+    // Новая функция для озвучивания сообщения
+    function speakMessage(message) {
+        if (!voiceEnabled || !message || message === lastSpokenMessage) return;
+        
+        // Не озвучиваем свои сообщения
+        if (message.startsWith(currentUser + ':')) return;
+        
+        // Останавливаем предыдущее озвучивание, если оно еще идет
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'ru-RU';
+        utterance.rate = 0.9; // Немного медленнее для лучшего понимания
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        // Выбираем русский голос, если доступен
+        const voices = speechSynthesis.getVoices();
+        const russianVoice = voices.find(voice => voice.lang.includes('ru'));
+        if (russianVoice) {
+            utterance.voice = russianVoice;
+        }
+        
+        speechSynthesis.speak(utterance);
+        lastSpokenMessage = message;
     }
 
     document.getElementById('msgInput').addEventListener('keypress', function (e) {
@@ -1024,10 +1136,16 @@
                         if (!messageHashes.has(messageHash)) {
                             messageHashes.add(messageHash);
                             displayedMessages.add(decrypted);
-                            msgDiv.innerHTML += `<div class="msg-item">${decrypted}</div>`;
                             
-                            if (!forceReload && !decrypted.startsWith(currentUser + ':')) {
+                            // Добавляем класс для своих сообщений
+                            const isOwnMessage = decrypted.startsWith(currentUser + ':');
+                            const messageClass = isOwnMessage ? 'msg-item own-message' : 'msg-item';
+                            msgDiv.innerHTML += `<div class="${messageClass}">${decrypted}</div>`;
+                            
+                            if (!forceReload && !isOwnMessage) {
                                 playNotificationSound();
+                                // Озвучиваем сообщение, если включено
+                                speakMessage(decrypted);
                             }
                         }
                     }
@@ -1090,7 +1208,7 @@
                 msgDiv.innerHTML = '';
             }
             
-            msgDiv.innerHTML += `<div class="msg-item">${fullMessage}</div>`;
+            msgDiv.innerHTML += `<div class="msg-item own-message">${fullMessage}</div>`;
             msgDiv.scrollTop = msgDiv.scrollHeight;
             
             lastContentHash = '';
