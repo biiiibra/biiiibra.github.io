@@ -20,6 +20,7 @@
   --text:#f0f0f5;
   --muted:#606070;
   --muted2:#404050;
+  --gold:#ffd700;
   --r:12px;
   --r2:20px;
   --fu:'Syne',sans-serif;
@@ -180,6 +181,10 @@ body{
 .channel-badge{
   font-size:10px;background:rgba(0,255,224,0.15);padding:2px 6px;
   border-radius:6px;color:var(--cyan);margin-left:8px;
+}
+.pinned-badge{
+  font-size:12px;margin-left:6px;color:var(--gold);
+  filter:drop-shadow(0 0 2px rgba(255,215,0,0.5));
 }
 .mute-badge{
   font-size:11px;background:transparent;border:none;
@@ -585,13 +590,14 @@ async function doReg(){
   const us=await getUsers();
   if(us.some(x=>x.username===u)){sm(el,'❌ пользователь уже существует');return}
   
-  // Канал wexa добавляется для всех, но писать в нём может только wexa
+  // Канал wexa добавляется для всех, закреплённый с галочкой
   const defaultChats=[{
     seed:'wexa',
     name:'📢 wexa',
     isChannel:true,
     owner:'wexa',
-    prev:'Добро пожаловать в канал wexa! (только для администратора)'
+    pinned:true,
+    prev:'⭐ Официальный канал wexa (только для администратора)'
   }];
   
   us.push({username:u,password:hp(p),chats:defaultChats,muted:[],created:Date.now()});
@@ -615,11 +621,23 @@ async function doLogin(){
   }
   ME=u;UDATA=usr;CHATS=usr.chats||[];MUTED_CHATS=new Set(usr.muted||[]);
   
-  // Проверяем наличие канала wexa
+  // Проверяем наличие канала wexa (закреплённый)
   if(!CHATS.some(c=>c.seed==='wexa')){
-    CHATS.unshift({seed:'wexa',name:'📢 wexa',isChannel:true,owner:'wexa',prev:'Добро пожаловать в канал wexa! (только для администратора)'});
+    CHATS.unshift({seed:'wexa',name:'📢 wexa',isChannel:true,owner:'wexa',pinned:true,prev:'⭐ Официальный канал wexa (только для администратора)'});
+    await saveChatsToUser();
+  } else {
+    // Обновляем флаг pinned для wexa
+    const wexaChat=CHATS.find(c=>c.seed==='wexa');
+    if(wexaChat) wexaChat.pinned=true;
     await saveChatsToUser();
   }
+  
+  // Сортируем чаты: закреплённые вверху, остальные по дате
+  CHATS.sort((a,b)=>{
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return (b.lastSeen||0) - (a.lastSeen||0);
+  });
   
   const bg=g('authBg');bg.style.opacity='0';bg.style.transform='scale(1.04)';
   setTimeout(()=>{
@@ -653,7 +671,8 @@ function renderChats(){
     const d=document.createElement('div');
     d.className='ci';d.id='ci'+i;
     const isMuted=MUTED_CHATS.has(c.seed);
-    d.innerHTML=`<div class="cinm"><span>${esc(c.name||c.seed)}${c.isChannel?' <span class="channel-badge">📢 канал</span>':''}</span><button class="mute-badge ${isMuted?'muted':''}" onclick="event.stopPropagation();toggleMute('${c.seed}')">${isMuted?'🔇':'🔔'}</button></div><div class="cipv">${esc(c.prev||'нет сообщений')}</div>`;
+    const pinnedIcon=c.pinned ? '<span class="pinned-badge" title="закреплённый канал">⭐</span>' : '';
+    d.innerHTML=`<div class="cinm"><span>${esc(c.name||c.seed)}${c.isChannel?` <span class="channel-badge">📢 канал</span>`:''}${pinnedIcon}</span><button class="mute-badge ${isMuted?'muted':''}" onclick="event.stopPropagation();toggleMute('${c.seed}')">${isMuted?'🔇':'🔔'}</button></div><div class="cipv">${esc(c.prev||'нет сообщений')}</div>`;
     d.onclick=()=>switchChat(c.seed);
     body.appendChild(d);
   });
@@ -698,7 +717,7 @@ async function switchChat(seed){
   SEED=seed;MSGS=[];HASH='';
   const ch=CHATS.find(c=>c.seed===seed)||{name:seed,isChannel:false,owner:null};
   g('chava').textContent=(ch.name||seed)[0].toUpperCase();
-  g('chnm').innerHTML=esc(ch.name||seed);
+  g('chnm').innerHTML=esc(ch.name||seed)+(ch.pinned?' <span style="color:#ffd700;font-size:12px;">⭐</span>':'');
   
   // Проверка прав на отправку
   const canWrite = canWriteInChat(ch);
@@ -716,7 +735,7 @@ async function switchChat(seed){
   let infoHtml='<div class="chst" id="chst">🔒 зашифровано · skip</div>';
   if(ch.isChannel){
     if(ch.seed==='wexa'){
-      infoHtml+=`<div class="channel-indicator">📢 официальный канал · только для администратора</div>`;
+      infoHtml+=`<div class="channel-indicator">⭐ официальный канал · только для администратора</div>`;
     } else {
       infoHtml+=`<div class="channel-indicator">📢 канал · владелец: ${ch.owner}</div>`;
     }
@@ -827,6 +846,13 @@ function setPrev(seed,text){
   const ch=CHATS.find(c=>c.seed===seed);
   if(!ch)return;
   ch.prev=text.length>42?text.slice(0,42)+'…':text;
+  ch.lastSeen=Date.now();
+  // Пересортировка с учётом закреплённых
+  CHATS.sort((a,b)=>{
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return (b.lastSeen||0) - (a.lastSeen||0);
+  });
   renderChats();setTimeout(moveSlider,30);
   saveChatsToUser();
 }
@@ -838,7 +864,13 @@ async function createChat(){
   const seed=g('mS').value.trim();
   if(!seed)return;
   if(CHATS.some(c=>c.seed===seed)){closeModal();switchChat(seed);return}
-  CHATS.push({seed,name:seed,prev:'новый чат',isChannel:false});
+  CHATS.push({seed,name:seed,prev:'новый чат',isChannel:false,lastSeen:Date.now()});
+  // Пересортировка
+  CHATS.sort((a,b)=>{
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return (b.lastSeen||0) - (a.lastSeen||0);
+  });
   await saveChatsToUser();
   renderChats();switchChat(seed);closeModal();
 }
@@ -857,7 +889,14 @@ async function createChannel(){
     isChannel:true,
     owner:ME,
     prev:'канал создан',
-    createdAt:Date.now()
+    lastSeen:Date.now(),
+    pinned:false
+  });
+  // Пересортировка
+  CHATS.sort((a,b)=>{
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return (b.lastSeen||0) - (a.lastSeen||0);
   });
   await saveChatsToUser();
   renderChats();switchChat(seed);closeChannelModal();
