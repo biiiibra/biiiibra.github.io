@@ -152,7 +152,9 @@ body{
   transition:all .25s;letter-spacing:.3px;
 }
 .newbtn:hover{background:rgba(0,255,224,0.06);border-color:var(--cyan)}
-.sbbody{flex:1;overflow-y:auto;padding:6px;position:relative}
+.sbbody{
+  flex:1;overflow-y:auto;padding:6px;position:relative;
+}
 .sbbody::-webkit-scrollbar{width:3px}
 .sbbody::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
 .slider{
@@ -169,11 +171,23 @@ body{
 .ci:hover{background:rgba(255,255,255,0.03)}
 .cinm{
   font-family:var(--fu);font-weight:600;font-size:13px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;justify-content:space-between;
 }
 .ci:hover .cinm,.ci.act .cinm{color:var(--cyan)}
 .cipv{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .sbempty{text-align:center;color:var(--muted);padding:40px 12px;font-size:12px;line-height:2}
+.channel-badge{
+  font-size:10px;background:rgba(0,255,224,0.15);padding:2px 6px;
+  border-radius:6px;color:var(--cyan);margin-left:8px;
+}
+.mute-badge{
+  font-size:11px;background:transparent;border:none;
+  color:var(--muted);cursor:pointer;padding:2px 5px;
+  border-radius:6px;transition:all .2s;margin-left:6px;
+}
+.mute-badge:hover{background:rgba(255,255,255,0.1);color:var(--cyan)}
+.mute-badge.muted{color:var(--mag)}
 
 /* MAIN CHAT */
 .chat{
@@ -210,6 +224,17 @@ body{
 }
 .chnm{font-family:var(--fu);font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chst{font-size:10px;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.channel-indicator{
+  font-size:10px;background:rgba(0,255,224,0.15);
+  padding:3px 8px;border-radius:12px;margin-left:8px;
+}
+.mute-indicator{
+  font-size:10px;background:transparent;border:1px solid var(--line2);
+  padding:3px 8px;border-radius:12px;margin-left:8px;
+  cursor:pointer;transition:all .2s;
+}
+.mute-indicator:hover{background:var(--ink3);border-color:var(--cyan)}
+.mute-indicator.muted{background:rgba(255,45,120,0.15);border-color:var(--mag);color:var(--mag)}
 
 #msgs{
   flex:1;overflow-y:auto;padding:14px;
@@ -370,7 +395,8 @@ body{
         <div class="usb">SKIP</div>
       </div>
     </div>
-    <button class="newbtn" onclick="openNC()">+ новый чат</button>
+    <button class="newbtn" onclick="openNC()">💬 + новый чат</button>
+    <button class="newbtn" onclick="openChannelModal()" style="margin-top:0;border-color:rgba(0,255,224,0.4)">📢 + создать канал</button>
     <div class="sbbody" id="sbbody">
       <div class="slider" id="slider"></div>
       <div class="sbempty" id="sbempty">нет чатов<br>создайте первый</div>
@@ -400,7 +426,7 @@ body{
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- CHAT MODAL -->
 <div class="modal" id="modal">
   <div class="mbox">
     <div class="mtitle">новый чат</div>
@@ -413,11 +439,45 @@ body{
   </div>
 </div>
 
+<!-- CHANNEL MODAL -->
+<div class="modal" id="channelModal">
+  <div class="mbox">
+    <div class="mtitle">📢 создать канал</div>
+    <input class="minput" id="channelName" placeholder="название канала" autocomplete="off" spellcheck="false">
+    <div class="mhint">в канале может писать только создатель. канал wexa — только для администратора wexa.</div>
+    <div class="mbtns">
+      <button class="mok" onclick="createChannel()">создать</button>
+      <button class="mcancel" onclick="closeChannelModal()">отмена</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──
 const GT='ghp_KARUAB62R0V7'+'TkGTvBxPzCppoHcztk3Gee2m';
 const GIST='3c13a9018358fc6dd01e0ec2df85f740';
 const UGIST='d0ff1e8a01417e7931279eb563198dba';
+
+// ── ЗВУК УВЕДОМЛЕНИЯ ──
+let audioCtx=null;
+function playNotif(){
+  try{
+    if(!audioCtx){
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    }
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type='sine';
+    osc.frequency.value=880;
+    gain.gain.value=0.15;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.5);
+    osc.stop(audioCtx.currentTime+0.5);
+    if(audioCtx.state==='suspended')audioCtx.resume();
+  }catch(e){console.log('audio:',e)}
+}
 
 // ── PARTICLES ──
 const cnv=document.getElementById('pc'),cx=cnv.getContext('2d');
@@ -480,7 +540,7 @@ function setTab(t){
 }
 
 // ── STATE ──
-let ME='',SEED='',TICK=null,HASH='',MSGS=[],CHATS=[],UDATA={};
+let ME='',SEED='',TICK=null,HASH='',MSGS=[],CHATS=[],UDATA={},MUTED_CHATS=new Set();
 
 // ── GITHUB API ──
 async function gGet(id){
@@ -524,7 +584,17 @@ async function doReg(){
   sm(el,'⏳ регистрация...','#606070');
   const us=await getUsers();
   if(us.some(x=>x.username===u)){sm(el,'❌ пользователь уже существует');return}
-  us.push({username:u,password:hp(p),chats:[],created:Date.now()});
+  
+  // Канал wexa добавляется для всех, но писать в нём может только wexa
+  const defaultChats=[{
+    seed:'wexa',
+    name:'📢 wexa',
+    isChannel:true,
+    owner:'wexa',
+    prev:'Добро пожаловать в канал wexa! (только для администратора)'
+  }];
+  
+  us.push({username:u,password:hp(p),chats:defaultChats,muted:[],created:Date.now()});
   await putUsers(us);
   sm(el,'✅ готово! войдите в аккаунт','#00ffe0');
   setTimeout(()=>{setTab('l');el.textContent=''},2000);
@@ -543,7 +613,14 @@ async function doLogin(){
     card.style.animation='none';void card.offsetWidth;card.style.animation='shake .4s ease';
     return;
   }
-  ME=u;UDATA=usr;CHATS=usr.chats||[];
+  ME=u;UDATA=usr;CHATS=usr.chats||[];MUTED_CHATS=new Set(usr.muted||[]);
+  
+  // Проверяем наличие канала wexa
+  if(!CHATS.some(c=>c.seed==='wexa')){
+    CHATS.unshift({seed:'wexa',name:'📢 wexa',isChannel:true,owner:'wexa',prev:'Добро пожаловать в канал wexa! (только для администратора)'});
+    await saveChatsToUser();
+  }
+  
   const bg=g('authBg');bg.style.opacity='0';bg.style.transform='scale(1.04)';
   setTimeout(()=>{
     bg.style.display='none';
@@ -554,7 +631,13 @@ async function doLogin(){
   },650);
 }
 
-// ── CHAT FILE NAME (отдельный файл для каждого seed) ──
+async function saveChatsToUser(){
+  const us=await getUsers();
+  const i=us.findIndex(u=>u.username===ME);
+  if(i>=0){us[i].chats=CHATS;us[i].muted=Array.from(MUTED_CHATS);await putUsers(us)}
+}
+
+// ── CHAT FILE NAME ──
 function cf(seed){
   return 'chat_'+CryptoJS.SHA256(seed).toString().slice(0,16)+'.txt';
 }
@@ -569,11 +652,27 @@ function renderChats(){
   CHATS.forEach((c,i)=>{
     const d=document.createElement('div');
     d.className='ci';d.id='ci'+i;
-    d.innerHTML=`<div class="cinm">${esc(c.name||c.seed)}</div><div class="cipv">${esc(c.prev||'нет сообщений')}</div>`;
+    const isMuted=MUTED_CHATS.has(c.seed);
+    d.innerHTML=`<div class="cinm"><span>${esc(c.name||c.seed)}${c.isChannel?' <span class="channel-badge">📢 канал</span>':''}</span><button class="mute-badge ${isMuted?'muted':''}" onclick="event.stopPropagation();toggleMute('${c.seed}')">${isMuted?'🔇':'🔔'}</button></div><div class="cipv">${esc(c.prev||'нет сообщений')}</div>`;
     d.onclick=()=>switchChat(c.seed);
     body.appendChild(d);
   });
   setTimeout(moveSlider,30);
+}
+
+function toggleMute(seed){
+  if(MUTED_CHATS.has(seed))MUTED_CHATS.delete(seed);
+  else MUTED_CHATS.add(seed);
+  saveChatsToUser();
+  renderChats();
+  if(SEED===seed){
+    const mi=g('muteIndicator');
+    if(mi){
+      const isMuted=MUTED_CHATS.has(seed);
+      mi.innerHTML=isMuted?'🔇 звук выкл':'🔔 уведомления вкл';
+      mi.classList.toggle('muted',isMuted);
+    }
+  }
 }
 
 function moveSlider(){
@@ -586,19 +685,50 @@ function moveSlider(){
   sl.style.height=ir.height+'px';
 }
 
+// ── ФУНКЦИЯ ПРОВЕРКИ ПРАВ НА ОТПРАВКУ В КАНАЛЕ ──
+function canWriteInChat(chat){
+  if(!chat.isChannel) return true; // Обычный чат
+  if(chat.seed === 'wexa') return ME === 'wexa'; // Только wexa может писать в wexa
+  return chat.owner === ME; // В остальных каналах только создатель
+}
+
 // ── SWITCH CHAT ──
 async function switchChat(seed){
   if(SEED===seed)return;
   SEED=seed;MSGS=[];HASH='';
-  const ch=CHATS.find(c=>c.seed===seed)||{name:seed};
+  const ch=CHATS.find(c=>c.seed===seed)||{name:seed,isChannel:false,owner:null};
   g('chava').textContent=(ch.name||seed)[0].toUpperCase();
-  g('chnm').textContent=ch.name||seed;
-  g('chst').textContent='🔒 зашифровано · skip';
+  g('chnm').innerHTML=esc(ch.name||seed);
+  
+  // Проверка прав на отправку
+  const canWrite = canWriteInChat(ch);
+  g('mi').disabled=!canWrite;
+  g('sbtn').disabled=!canWrite;
+  
+  if(!canWrite){
+    if(ch.seed==='wexa') g('mi').placeholder='🔒 только администратор wexa может писать в этом канале';
+    else g('mi').placeholder='🔒 только владелец канала может писать';
+  } else {
+    g('mi').placeholder='сообщение...';
+  }
+  
+  // Информация о канале
+  let infoHtml='<div class="chst" id="chst">🔒 зашифровано · skip</div>';
+  if(ch.isChannel){
+    if(ch.seed==='wexa'){
+      infoHtml+=`<div class="channel-indicator">📢 официальный канал · только для администратора</div>`;
+    } else {
+      infoHtml+=`<div class="channel-indicator">📢 канал · владелец: ${ch.owner}</div>`;
+    }
+  }
+  const isMuted=MUTED_CHATS.has(seed);
+  infoHtml+=`<button class="mute-indicator ${isMuted?'muted':''}" id="muteIndicator" onclick="toggleMute('${seed}')">${isMuted?'🔇 звук выкл':'🔔 уведомления вкл'}</button>`;
+  document.querySelector('.chtop .chst').innerHTML=infoHtml;
+  
   moveSlider();
   const m=g('msgs');
   m.style.opacity='0';m.style.transform='translateY(6px)';
   setTimeout(()=>{m.innerHTML='';m.style.opacity='1';m.style.transform='translateY(0)'},150);
-  g('mi').disabled=false;g('sbtn').disabled=false;
   closeSB();
   await pullMsgs(true);
   if(TICK)clearInterval(TICK);
@@ -634,6 +764,12 @@ async function pullMsgs(force=false){
       MSGS.forEach(s=>showMsg(s));
     }else{
       if(!fresh.length)return;
+      const isMuted=MUTED_CHATS.has(SEED);
+      for(const msg of fresh){
+        const col=msg.indexOf(':');
+        const sender=col>0?msg.slice(0,col).trim():'';
+        if(sender!==ME && !isMuted)playNotif();
+      }
       fresh.forEach(s=>showMsg(s));
     }
     m.scrollTop=m.scrollHeight;
@@ -659,22 +795,24 @@ function showMsg(raw){
 // ── SEND MESSAGE ──
 async function sendMsg(){
   if(!SEED)return;
+  const ch=CHATS.find(c=>c.seed===SEED);
+  if(!canWriteInChat(ch)){
+    if(ch.seed==='wexa') alert('🔒 Только администратор wexa может писать в этом канале');
+    else alert('🔒 Только владелец канала может отправлять сообщения');
+    return;
+  }
   const inp=g('mi'),text=inp.value.trim();
   if(!text)return;
   const full=`${ME}: ${text}`;
   const enc=CryptoJS.AES.encrypt(full,SEED).toString();
   const fname=cf(SEED);
   inp.value='';inp.focus();
-  // Показываем сразу
   if(!MSGS.includes(full)){MSGS.push(full);showMsg(full);g('msgs').scrollTop=9999}
   try{
-    // Читаем текущий файл чата
     const data=await gGet(GIST);
     const existing=data.files[fname]?.content||'';
     const updated=existing+(existing?'\n':'')+enc;
-    // Пишем обратно
     await gPatch(GIST,{[fname]:{content:updated}});
-    // Обновляем preview в сайдбаре
     setPrev(SEED,full);
     HASH='';
   }catch(e){
@@ -690,34 +828,39 @@ function setPrev(seed,text){
   if(!ch)return;
   ch.prev=text.length>42?text.slice(0,42)+'…':text;
   renderChats();setTimeout(moveSlider,30);
-  // async save to gist (best-effort)
-  (async()=>{
-    try{
-      const us=await getUsers();
-      const i=us.findIndex(u=>u.username===ME);
-      if(i>=0){us[i].chats=CHATS;await putUsers(us)}
-    }catch{}
-  })();
+  saveChatsToUser();
 }
 
 // ── NEW CHAT ──
-function openNC(){
-  g('modal').classList.add('on');
-  g('mS').value='';
-  setTimeout(()=>g('mS').focus(),100);
-}
+function openNC(){g('modal').classList.add('on');g('mS').value='';setTimeout(()=>g('mS').focus(),100);}
 function closeModal(){g('modal').classList.remove('on')}
 async function createChat(){
   const seed=g('mS').value.trim();
   if(!seed)return;
   if(CHATS.some(c=>c.seed===seed)){closeModal();switchChat(seed);return}
-  CHATS.push({seed,name:seed,prev:'новый чат'});
-  try{
-    const us=await getUsers();
-    const i=us.findIndex(u=>u.username===ME);
-    if(i>=0){us[i].chats=CHATS;await putUsers(us)}
-  }catch{}
+  CHATS.push({seed,name:seed,prev:'новый чат',isChannel:false});
+  await saveChatsToUser();
   renderChats();switchChat(seed);closeModal();
+}
+
+// ── CHANNELS ──
+function openChannelModal(){g('channelModal').classList.add('on');g('channelName').value='';setTimeout(()=>g('channelName').focus(),100);}
+function closeChannelModal(){g('channelModal').classList.remove('on')}
+async function createChannel(){
+  const name=g('channelName').value.trim();
+  if(!name){alert('введите название канала');return}
+  const seed='ch_'+CryptoJS.SHA256(name+Date.now()).toString().slice(0,12);
+  if(CHATS.some(c=>c.seed===seed)){closeChannelModal();return}
+  CHATS.push({
+    seed:seed,
+    name:'📢 '+name,
+    isChannel:true,
+    owner:ME,
+    prev:'канал создан',
+    createdAt:Date.now()
+  });
+  await saveChatsToUser();
+  renderChats();switchChat(seed);closeChannelModal();
 }
 
 // ── MOBILE ──
@@ -732,6 +875,7 @@ function sm(el,t,c='#ff2d78'){el.style.color=c;el.textContent=t}
 // ── KEYBOARD ──
 g('mi').addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}});
 g('mS').addEventListener('keypress',e=>{if(e.key==='Enter')createChat()});
+g('channelName').addEventListener('keypress',e=>{if(e.key==='Enter')createChannel()});
 g('lP').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin()});
 g('lU').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin()});
 g('sbbody').addEventListener('scroll',moveSlider);
