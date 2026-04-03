@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>skip · private chat</title>
+    <title>SKIP · private chat</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * {
@@ -25,7 +25,6 @@
             --error: #ff4444;
             --success: #44ff88;
         }
-        }
 
         body {
             background: var(--bg-dark);
@@ -39,7 +38,6 @@
             overflow: hidden;
         }
 
-        /* Анимированный фон с градиентом */
         body::before {
             content: '';
             position: fixed;
@@ -49,9 +47,9 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: radial-gradient(circle at center, 
-                rgba(255, 107, 0, 0.15) 0%,
-                rgba(255, 68, 0, 0.1) 25%,
-                rgba(10, 5, 0, 0) 50%);
+                rgba(0, 168, 255, 0.1) 0%,
+                rgba(0, 168, 255, 0.05) 25%,
+                rgba(10, 10, 26, 0) 50%);
             animation: rotate 60s linear infinite;
             z-index: 0;
         }
@@ -63,8 +61,8 @@
             height: 100%;
             background: repeating-linear-gradient(
                 45deg,
-                rgba(255, 107, 0, 0.02) 0px,
-                rgba(255, 107, 0, 0.02) 2px,
+                rgba(0, 168, 255, 0.02) 0px,
+                rgba(0, 168, 255, 0.02) 2px,
                 transparent 2px,
                 transparent 8px
             );
@@ -75,75 +73,6 @@
         @keyframes rotate {
             from { transform: translate(-50%, -50%) rotate(0deg); }
             to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        /* Частицы */
-        #particles {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: var(--primary);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--primary);
-            opacity: 0.3;
-            animation: float linear infinite;
-        }
-
-        @keyframes float {
-            from { transform: translateY(100vh) scale(0); opacity: 0; }
-            to { transform: translateY(-100vh) scale(1); opacity: 0.5; }
-        }
-
-        /* Кнопка скачивания */
-        .download-btn {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 100;
-            background: var(--surface);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 40px;
-            padding: 12px 28px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.3px;
-        }
-
-        .download-btn:hover {
-            background: rgba(255, 107, 0, 0.15);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(255, 107, 0, 0.3);
-        }
-
-        .download-btn:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 600px) {
-            .download-btn {
-                top: 16px;
-                right: 16px;
-                padding: 10px 20px;
-                font-size: 13px;
-            }
         }
 
         /* Основной контейнер */
@@ -161,7 +90,6 @@
             overflow: hidden;
             height: 80vh;
             max-height: 750px;
-            transition: transform 0.3s ease;
         }
 
         /* ЭКРАНЫ АВТОРИЗАЦИИ */
@@ -179,17 +107,10 @@
 
         .auth-header h1 {
             font-size: 3em;
-            background: linear-gradient(135deg, #ff8c40, #ff4500);
+            background: linear-gradient(135deg, var(--primary), #ffffff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
-            filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.5));
-        }
-
-        .auth-header p {
-            color: var(--text-secondary);
-            font-size: 14px;
-            letter-spacing: 1px;
         }
 
         .auth-tabs {
@@ -210,14 +131,12 @@
             font-weight: 600;
             color: var(--text-secondary);
             transition: all 0.3s ease;
-            font-size: 15px;
-            letter-spacing: 0.5px;
         }
 
         .auth-tab.active {
-            background: linear-gradient(135deg, var(--primary), #ff4500);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.4);
         }
 
         .auth-form {
@@ -236,22 +155,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .input-group {
-            position: relative;
-        }
-
-        .input-group i {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 18px;
-        }
-
-        input, .glass-input {
+        input {
             width: 100%;
-            padding: 16px 20px 16px 50px;
+            padding: 16px 20px;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
             border-radius: 60px;
@@ -264,18 +170,13 @@
         input:focus {
             border-color: var(--primary);
             background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
-        }
-
-        input::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.6;
+            box-shadow: 0 0 0 4px rgba(0, 168, 255, 0.1);
         }
 
         .glass-button {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, var(--primary), #ff4500);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
             border-radius: 60px;
             color: white;
@@ -283,18 +184,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.4);
-            letter-spacing: 0.5px;
-            margin-top: 8px;
-        }
-
-        .glass-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(255, 69, 0, 0.6);
-        }
-
-        .glass-button:active {
-            transform: translateY(0);
         }
 
         /* ЭКРАН ЧАТА */
@@ -310,25 +199,17 @@
             border-bottom: 1px solid var(--glass-border);
         }
 
-        .chat-header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
         .user-info {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 16px;
         }
 
         .avatar {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, var(--primary), #ff4500);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border-radius: 40px;
             display: flex;
             align-items: center;
@@ -336,150 +217,8 @@
             font-weight: bold;
             font-size: 18px;
             color: white;
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
         }
 
-        #display-name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .connection-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 6px 12px;
-            border-radius: 40px;
-            font-size: 13px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 8px;
-            background: #888;
-            transition: all 0.3s ease;
-        }
-
-        .status-dot.connected {
-            background: var(--success);
-            box-shadow: 0 0 10px var(--success);
-        }
-
-        .chat-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .icon-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 36px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            font-size: 16px;
-        }
-
-        .icon-btn:hover {
-            background: rgba(255, 107, 0, 0.2);
-            border-color: var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* Стили для чекбокса озвучивания */
-        .voice-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 6px 12px;
-            border-radius: 40px;
-            font-size: 13px;
-            cursor: pointer;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .voice-checkbox:hover {
-            border-color: var(--primary);
-            background: rgba(255, 107, 0, 0.1);
-        }
-
-        .voice-checkbox input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            margin: 0;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
-
-        .voice-checkbox.active {
-            border-color: var(--primary);
-            background: rgba(255, 107, 0, 0.15);
-        }
-
-        .chat-header-bottom {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .chat-input-group {
-            flex: 1;
-            display: flex;
-            gap: 8px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 4px;
-            border-radius: 60px;
-        }
-
-        #chatSeed {
-            flex: 1;
-            padding: 12px 18px;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-        }
-
-        #chatSeed::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .join-chat-btn {
-            padding: 8px 20px;
-            background: linear-gradient(135deg, var(--primary), #ff4500);
-            border: none;
-            border-radius: 40px;
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .current-chat {
-            padding: 6px 14px;
-            background: rgba(255, 107, 0, 0.1);
-            border: 1px solid rgba(255, 107, 0, 0.3);
-            border-radius: 40px;
-            font-size: 13px;
-            color: var(--primary);
-            white-space: nowrap;
-        }
-
-        /* Сообщения */
         #messages {
             flex: 1;
             overflow-y: auto;
@@ -490,19 +229,14 @@
         }
 
         .msg-item {
-            background: rgba(30, 18, 8, 0.6);
-            backdrop-filter: blur(10px);
+            background: var(--surface);
             padding: 14px 20px;
             border-radius: 24px;
             max-width: 85%;
             word-wrap: break-word;
             align-self: flex-start;
-            border: 1px solid rgba(255, 107, 0, 0.15);
             border-left: 4px solid var(--primary);
             animation: messageIn 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            color: var(--text-primary);
-            line-height: 1.5;
         }
 
         .msg-item.own-message {
@@ -516,121 +250,78 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        .empty-chat {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 40px;
-            font-style: italic;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 30px;
-            border: 1px dashed var(--glass-border);
-        }
-
-        /* Поле ввода */
         .input-area {
             padding: 20px 24px;
             background: rgba(0, 0, 0, 0.2);
             border-top: 1px solid var(--glass-border);
             display: flex;
             gap: 12px;
-            align-items: center;
         }
 
         .message-input-wrapper {
             flex: 1;
             display: flex;
-            align-items: center;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 60px;
             padding: 4px 4px 4px 20px;
             border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .message-input-wrapper:focus-within {
-            border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
         }
 
         #msgInput {
             flex: 1;
             background: transparent;
             border: none;
-            padding: 12px 8px 12px 0;
+            padding: 12px 8px;
             color: var(--text-primary);
             font-size: 15px;
             outline: none;
-        }
-
-        #msgInput:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .send-btn {
             width: 48px;
             height: 48px;
             border-radius: 48px;
-            background: linear-gradient(135deg, var(--primary), #ff4500);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
             font-size: 20px;
-            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
         }
 
-        .send-btn:hover:not(:disabled) {
-            transform: scale(1.05) rotate(90deg);
-            box-shadow: 0 6px 20px rgba(255, 69, 0, 0.5);
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 45px;
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
         }
 
-        .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Уведомления */
-        .error-message, .success-message {
-            padding: 12px 20px;
-            border-radius: 40px;
-            text-align: center;
-            font-size: 14px;
-            animation: slideUp 0.3s ease;
-        }
-
-        .error-message {
-            background: rgba(255, 68, 68, 0.15);
-            border: 1px solid var(--error);
-            color: #ff8888;
-        }
-
-        .success-message {
-            background: rgba(68, 255, 136, 0.15);
-            border: 1px solid var(--success);
-            color: #88ffaa;
-        }
-
-        /* Анимации */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .pulse {
-            animation: pulse 2s ease-in-out infinite;
+        .theme-switch:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
         }
     </style>
 </head>
 <body>
 
-<!-- Контейнер -->
+<div class="theme-switch" onclick="toggleTheme()">
+    <span class="theme-icon">🎨</span>
+</div>
+
 <div class="container">
-    <!-- ЭКРАН АВТОРИЗАЦИИ -->
     <div id="auth-screen">
         <div class="auth-header">
             <h1>SKIP</h1>
@@ -642,78 +333,41 @@
             <div class="auth-tab" onclick="switchAuthTab('register')">Регистрация</div>
         </div>
 
-        <!-- ФОРМА ВХОДА -->
         <div id="login-form" class="auth-form active">
-            <div class="input-group">
-                <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%);">👤</span>
-                <input type="text" id="login-username" placeholder="никнейм" autocomplete="off">
-            </div>
-            <div class="input-group">
-                <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%);">🔒</span>
-                <input type="password" id="login-password" placeholder="пароль">
-            </div>
+            <input type="text" id="login-username" placeholder="никнейм">
+            <input type="password" id="login-password" placeholder="пароль">
             <button class="glass-button" onclick="login()">Войти</button>
-            <div id="login-message" class="error-message"></div>
+            <div id="login-message" style="color: var(--error); text-align: center;"></div>
         </div>
 
-        <!-- ФОРМА РЕГИСТРАЦИИ -->
         <div id="register-form" class="auth-form">
-            <div class="input-group">
-                <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%);">👤</span>
-                <input type="text" id="register-username" placeholder="никнейм" autocomplete="off">
-            </div>
-            <div class="input-group">
-                <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%);">🔒</span>
-                <input type="password" id="register-password" placeholder="пароль">
-            </div>
-            <div class="input-group">
-                <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%);">✓</span>
-                <input type="password" id="register-confirm" placeholder="подтвердите пароль">
-            </div>
+            <input type="text" id="register-username" placeholder="никнейм">
+            <input type="password" id="register-password" placeholder="пароль">
+            <input type="password" id="register-confirm" placeholder="подтвердите пароль">
             <button class="glass-button" onclick="register()">Зарегистрироваться</button>
-            <div id="register-message" class="error-message"></div>
+            <div id="register-message" style="color: var(--error); text-align: center;"></div>
         </div>
     </div>
 
-    <!-- ЭКРАН ЧАТА -->
     <div id="chat-screen">
         <div class="chat-header">
-            <div class="chat-header-top">
-                <div class="user-info">
-                    <div class="avatar" id="avatar">👤</div>
-                    <span id="display-name"></span>
-                </div>
-                <div class="connection-badge">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span class="status-text" id="statusText">Подключение...</span>
-                </div>
-                <div class="chat-actions">
-                    <label class="voice-checkbox" id="voiceCheckbox" title="Озвучивать сообщения">
-                        <input type="checkbox" id="voiceToggle" onchange="toggleVoice()">
-                        <span>🔊</span>
-                    </label>
-                    <div id="sound-toggle" class="icon-btn" onclick="toggleSound()">
-                        <span class="sound-indicator">🔊</span>
-                    </div>
-                    <button class="icon-btn" onclick="loadMessages(true)">🔄</button>
-                    <button class="icon-btn" onclick="logout()">🚪</button>
-                </div>
+            <div class="user-info">
+                <div class="avatar" id="avatar">👤</div>
+                <span id="display-name"></span>
+                <button class="icon-btn" onclick="logout()" style="margin-left: auto;">🚪</button>
             </div>
-            <div class="chat-header-bottom">
-                <div class="chat-input-group">
-                    <input type="text" id="chatSeed" placeholder="сид чата" autocomplete="off">
-                    <button class="join-chat-btn" onclick="joinChat()">Войти</button>
-                </div>
-                <span id="currentChatName" class="current-chat"></span>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="chatSeed" placeholder="сид чата" style="flex: 1;">
+                <button class="join-chat-btn" onclick="joinChat()">Войти</button>
             </div>
+            <span id="currentChatName" class="current-chat"></span>
         </div>
         
         <div id="messages"></div>
 
         <div class="input-area">
             <div class="message-input-wrapper">
-                <span style="color: var(--text-secondary); margin-right: 8px;">💬</span>
-                <input type="text" id="msgInput" placeholder="сообщение..." autocomplete="off" disabled>
+                <input type="text" id="msgInput" placeholder="сообщение..." disabled>
             </div>
             <button class="send-btn" onclick="sendMessage()" disabled>➤</button>
         </div>
@@ -721,75 +375,34 @@
 </div>
 
 <script>
-    // ==================== НАСТРОЙКИ ====================
-    const GITHUB_TOKEN = 'ghp_5GhNw2IFw' + 'SNBiCarLnNWF6' + 'zMHi4hNW4LgR4N';
+    // Токены (те же самые)
+    const GITHUB_TOKEN = 'ghp_5GhNw2IFw' + 'SNBiCarLnNWF6zMHi4hNW4LgR4N';
     const GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740';
     const USERS_GIST_ID = 'd0ff1e8a01417e7931279eb563198dba';
     const FILE_NAME = 'chat.txt';
     const USERS_FILE = 'users.json';
 
-    // ==================== ПЕРЕМЕННЫЕ ====================
     let currentUser = '';
     let currentChatSeed = '';
-    let autoUpdateInterval = null;
-    let displayedMessages = new Set();
     let messageHashes = new Set();
-    let isGitHubWorking = false;
-    let soundEnabled = true;
-    let voiceEnabled = false; // Новая переменная для озвучивания
-    let notificationSound = null;
+    let updateInterval = null;
     let lastContentHash = '';
-    let isUpdating = false;
-    let speechSynthesis = window.speechSynthesis; // Для озвучивания
-    let lastSpokenMessage = ''; // Чтобы не повторять одно и то же
 
-    // Создание частиц
-    function createParticles() {
-        const particlesContainer = document.createElement('div');
-        particlesContainer.id = 'particles';
-        document.body.appendChild(particlesContainer);
-
-        for (let i = 0; i < 50; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            particle.style.animationDelay = Math.random() * 10 + 's';
-            particle.style.width = (Math.random() * 3 + 1) + 'px';
-            particle.style.height = particle.style.width;
-            particle.style.opacity = Math.random() * 0.3 + 0.1;
-            particlesContainer.appendChild(particle);
-        }
-    }
-
-    createParticles();
-
-    // Инициализация звука
-    try {
-        notificationSound = new Audio('data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8AP8A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gD+AP4A/gA=');
-        notificationSound.volume = 0.2;
-    } catch (e) {}
-
-    // ==================== ФУНКЦИИ АВТОРИЗАЦИИ ====================
-    
     function switchAuthTab(tab) {
-        const tabs = document.querySelectorAll('.auth-tab');
-        const forms = document.querySelectorAll('.auth-form');
-        
-        tabs.forEach(t => t.classList.remove('active'));
-        forms.forEach(f => f.classList.remove('active'));
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
         
         if (tab === 'login') {
-            tabs[0].classList.add('active');
+            document.querySelectorAll('.auth-tab')[0].classList.add('active');
             document.getElementById('login-form').classList.add('active');
         } else {
-            tabs[1].classList.add('active');
+            document.querySelectorAll('.auth-tab')[1].classList.add('active');
             document.getElementById('register-form').classList.add('active');
         }
     }
 
-    function hashPassword(password) {
-        return CryptoJS.SHA256(password).toString();
+    function hashPassword(pwd) {
+        return CryptoJS.SHA256(pwd).toString();
     }
 
     function hashString(str) {
@@ -798,386 +411,181 @@
 
     async function loadUsers() {
         try {
-            const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
+            const r = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
             });
-            if (!response.ok) return [];
-            const data = await response.json();
+            if (!r.ok) return [];
+            const data = await r.json();
             return JSON.parse(data.files[USERS_FILE].content || '[]');
-        } catch (err) {
-            return [];
-        }
+        } catch(e) { return []; }
     }
 
     async function saveUsers(users) {
         try {
-            const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
+            const r = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
                 method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    files: { [USERS_FILE]: { content: JSON.stringify(users, null, 2) } }
-                })
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files: { [USERS_FILE]: { content: JSON.stringify(users, null, 2) } } })
             });
-            return response.ok;
-        } catch (err) {
-            return false;
-        }
+            return r.ok;
+        } catch(e) { return false; }
     }
 
     async function register() {
         const username = document.getElementById('register-username').value.trim();
         const password = document.getElementById('register-password').value.trim();
         const confirm = document.getElementById('register-confirm').value.trim();
-        const messageEl = document.getElementById('register-message');
+        const msgEl = document.getElementById('register-message');
 
         if (!username || !password || !confirm) {
-            messageEl.textContent = '❌ Заполните все поля';
+            msgEl.textContent = '❌ Заполните все поля';
             return;
         }
-
         if (password !== confirm) {
-            messageEl.textContent = '❌ Пароли не совпадают';
+            msgEl.textContent = '❌ Пароли не совпадают';
             return;
         }
-
         if (password.length < 3) {
-            messageEl.textContent = '❌ Пароль должен быть минимум 3 символа';
+            msgEl.textContent = '❌ Пароль минимум 3 символа';
             return;
         }
 
         const users = await loadUsers();
-        
         if (users.some(u => u.username === username)) {
-            messageEl.textContent = '❌ Пользователь уже существует';
+            msgEl.textContent = '❌ Пользователь уже существует';
             return;
         }
 
-        users.push({
-            username: username,
-            password: hashPassword(password),
-            created: new Date().toISOString()
-        });
-
-        const saved = await saveUsers(users);
+        users.push({ username: username, password: hashPassword(password), created: new Date().toISOString() });
         
-        if (saved) {
-            messageEl.className = 'success-message';
-            messageEl.textContent = '✅ Регистрация успешна!';
-            
-            document.getElementById('register-username').value = '';
-            document.getElementById('register-password').value = '';
-            document.getElementById('register-confirm').value = '';
-            
-            setTimeout(() => {
-                switchAuthTab('login');
-                messageEl.textContent = '';
-                messageEl.className = 'error-message';
-            }, 2000);
+        if (await saveUsers(users)) {
+            msgEl.style.color = '#44ff88';
+            msgEl.textContent = '✅ Регистрация успешна!';
+            setTimeout(() => switchAuthTab('login'), 2000);
+        } else {
+            msgEl.textContent = '❌ Ошибка регистрации';
         }
     }
 
     async function login() {
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value.trim();
-        const messageEl = document.getElementById('login-message');
+        const msgEl = document.getElementById('login-message');
 
         if (!username || !password) {
-            messageEl.textContent = '❌ Введите ник и пароль';
+            msgEl.textContent = '❌ Введите ник и пароль';
             return;
         }
 
         const users = await loadUsers();
-        const hashedPassword = hashPassword(password);
-        const user = users.find(u => u.username === username && u.password === hashedPassword);
+        const user = users.find(u => u.username === username && u.password === hashPassword(password));
 
         if (user) {
             currentUser = username;
             document.getElementById('avatar').innerText = username.charAt(0).toUpperCase();
-            
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('display-name').innerText = currentUser;
-            
-            loadSoundSetting();
-            loadVoiceSetting(); // Загружаем настройку озвучивания
-            await checkGitHubConnection();
+            document.getElementById('login-message').textContent = '';
         } else {
-            messageEl.textContent = '❌ Неверный ник или пароль';
+            msgEl.textContent = '❌ Неверный ник или пароль';
         }
     }
 
     function logout() {
+        if (updateInterval) clearInterval(updateInterval);
+        currentChatSeed = '';
+        messageHashes.clear();
         document.getElementById('chat-screen').style.display = 'none';
         document.getElementById('auth-screen').style.display = 'flex';
-        
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
         document.getElementById('chatSeed').value = '';
         document.getElementById('currentChatName').innerText = '';
-        
-        disableChatInput();
-        
-        currentChatSeed = '';
-        displayedMessages.clear();
-        messageHashes.clear();
-        
-        if (autoUpdateInterval) {
-            clearInterval(autoUpdateInterval);
-            autoUpdateInterval = null;
-        }
-        
-        // Останавливаем озвучивание
-        if (speechSynthesis.speaking) {
-            speechSynthesis.cancel();
-        }
-    }
-
-    // ==================== ФУНКЦИИ ЧАТА ====================
-
-    function enableChatInput() {
-        document.getElementById('msgInput').disabled = false;
-        document.querySelector('.send-btn').disabled = false;
-        document.getElementById('msgInput').placeholder = 'сообщение...';
-    }
-
-    function disableChatInput() {
         document.getElementById('msgInput').disabled = true;
         document.querySelector('.send-btn').disabled = true;
-        document.getElementById('msgInput').placeholder = 'войдите в чат...';
-    }
-
-    async function checkGitHubConnection() {
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        
-        try {
-            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
-            
-            if (response.ok) {
-                statusDot.className = 'status-dot connected';
-                statusText.textContent = 'Подключено';
-                isGitHubWorking = true;
-                
-                if (currentChatSeed) {
-                    enableChatInput();
-                }
-                return true;
-            } else {
-                statusDot.className = 'status-dot';
-                statusText.textContent = 'Ошибка';
-                isGitHubWorking = false;
-                disableChatInput();
-                return false;
-            }
-        } catch (err) {
-            statusDot.className = 'status-dot';
-            statusText.textContent = 'Нет сети';
-            isGitHubWorking = false;
-            disableChatInput();
-            return false;
-        }
+        document.getElementById('messages').innerHTML = '';
     }
 
     function joinChat() {
         const seed = document.getElementById('chatSeed').value.trim();
-        
         if (!seed) {
             alert('Введите сид чата');
             return;
         }
         
-        if (!isGitHubWorking) {
-            alert('Нет подключения');
-            return;
-        }
-        
         currentChatSeed = seed;
         document.getElementById('currentChatName').innerText = `📁 ${seed}`;
+        document.getElementById('msgInput').disabled = false;
+        document.querySelector('.send-btn').disabled = false;
         
-        enableChatInput();
-        
-        displayedMessages.clear();
         messageHashes.clear();
         document.getElementById('messages').innerHTML = '';
         lastContentHash = '';
         
         loadMessages(true);
         
-        if (autoUpdateInterval) {
-            clearInterval(autoUpdateInterval);
-        }
-        autoUpdateInterval = setInterval(() => loadMessages(false), 3000);
+        if (updateInterval) clearInterval(updateInterval);
+        updateInterval = setInterval(() => loadMessages(false), 3000);
     }
 
-    function toggleSound() {
-        soundEnabled = !soundEnabled;
-        const indicator = document.querySelector('.sound-indicator');
-        indicator.textContent = soundEnabled ? '🔊' : '🔈';
-        localStorage.setItem('magmaSoundEnabled', soundEnabled);
-    }
-
-    // Новая функция для переключения озвучивания
-    function toggleVoice() {
-        voiceEnabled = document.getElementById('voiceToggle').checked;
-        localStorage.setItem('magmaVoiceEnabled', voiceEnabled);
+    async function loadMessages(forceReload = false) {
+        if (!currentChatSeed) return;
         
-        // Обновляем класс для визуального эффекта
-        const checkbox = document.getElementById('voiceCheckbox');
-        if (voiceEnabled) {
-            checkbox.classList.add('active');
-        } else {
-            checkbox.classList.remove('active');
-        }
-    }
-
-    function loadSoundSetting() {
-        const saved = localStorage.getItem('magmaSoundEnabled');
-        if (saved !== null) {
-            soundEnabled = saved === 'true';
-            document.querySelector('.sound-indicator').textContent = soundEnabled ? '🔊' : '🔈';
-        }
-    }
-
-    function loadVoiceSetting() {
-        const saved = localStorage.getItem('magmaVoiceEnabled');
-        if (saved !== null) {
-            voiceEnabled = saved === 'true';
-            document.getElementById('voiceToggle').checked = voiceEnabled;
+        try {
+            const r = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (!r.ok) return;
             
-            const checkbox = document.getElementById('voiceCheckbox');
-            if (voiceEnabled) {
-                checkbox.classList.add('active');
-            } else {
-                checkbox.classList.remove('active');
+            const data = await r.json();
+            const content = data.files[FILE_NAME].content || '';
+            
+            const currentHash = hashString(content);
+            if (!forceReload && currentHash === lastContentHash) return;
+            
+            const lines = content.split('\n').filter(l => l.trim());
+            const msgDiv = document.getElementById('messages');
+            
+            if (forceReload) {
+                msgDiv.innerHTML = '';
+                messageHashes.clear();
             }
-        }
-    }
-
-    // Новая функция для озвучивания сообщения
-    function speakMessage(message) {
-        if (!voiceEnabled || !message || message === lastSpokenMessage) return;
-        
-        // Не озвучиваем свои сообщения
-        if (message.startsWith(currentUser + ':')) return;
-        
-        // Останавливаем предыдущее озвучивание, если оно еще идет
-        if (speechSynthesis.speaking) {
-            speechSynthesis.cancel();
-        }
-        
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = 'ru-RU';
-        utterance.rate = 0.9; // Немного медленнее для лучшего понимания
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        
-        // Выбираем русский голос, если доступен
-        const voices = speechSynthesis.getVoices();
-        const russianVoice = voices.find(voice => voice.lang.includes('ru'));
-        if (russianVoice) {
-            utterance.voice = russianVoice;
-        }
-        
-        speechSynthesis.speak(utterance);
-        lastSpokenMessage = message;
-    }
-
-    document.getElementById('msgInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    document.getElementById('chatSeed').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') joinChat();
-    });
-
-async function loadMessages(forceReload = false) {
-    if (isUpdating && !forceReload) return;
-    if (!isGitHubWorking || !currentChatSeed) return;
-    
-    isUpdating = true;
-    const msgDiv = document.getElementById('messages');
-    
-    try {
-        const response = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка');
-        
-        const data = await response.json();
-        const content = data.files[FILE_NAME].content || '';
-        
-        const currentHash = hashString(content);
-        if (!forceReload && currentHash === lastContentHash) {
-            isUpdating = false;
-            return;
-        }
-        
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        if (forceReload) {
-            msgDiv.innerHTML = '';
-            displayedMessages.clear();
-            messageHashes.clear();
-        }
-        
-        // ВАЖНО: Сохраняем текущие сообщения, чтобы проверить дубликаты
-        const existingMessages = new Set();
-        for (let i = 0; i < msgDiv.children.length; i++) {
-            const child = msgDiv.children[i];
-            if (!child.classList.contains('empty-chat')) {
-                existingMessages.add(child.textContent);
+            
+            // Сохраняем существующие сообщения для проверки дубликатов
+            const existingMessages = new Set();
+            for (let i = 0; i < msgDiv.children.length; i++) {
+                existingMessages.add(msgDiv.children[i].textContent);
             }
-        }
-        
-        for (let line of lines) {
-            try {
-                const bytes = CryptoJS.AES.decrypt(line, currentChatSeed);
-                const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if (decrypted && decrypted.length > 3) {
-                    const messageHash = hashString(decrypted);
-                    
-                    // Проверяем на дубликаты по хэшу и по содержимому
-                    if (!messageHashes.has(messageHash) && !existingMessages.has(decrypted)) {
-                        messageHashes.add(messageHash);
-                        displayedMessages.add(decrypted);
+            
+            for (let line of lines) {
+                try {
+                    const decrypted = CryptoJS.AES.decrypt(line, currentChatSeed).toString(CryptoJS.enc.Utf8);
+                    if (decrypted && decrypted.length > 3) {
+                        const msgHash = hashString(decrypted);
                         
-                        const isOwnMessage = decrypted.startsWith(currentUser + ':');
-                        const messageClass = isOwnMessage ? 'msg-item own-message' : 'msg-item';
-                        msgDiv.innerHTML += `<div class="${messageClass}">${decrypted}</div>`;
-                        
-                        if (!forceReload && !isOwnMessage) {
-                            playNotificationSound();
-                            speakMessage(decrypted);
+                        if (!messageHashes.has(msgHash) && !existingMessages.has(decrypted)) {
+                            messageHashes.add(msgHash);
+                            const isOwn = decrypted.startsWith(currentUser + ':');
+                            const msgClass = isOwn ? 'msg-item own-message' : 'msg-item';
+                            msgDiv.innerHTML += `<div class="${msgClass}">${decrypted}</div>`;
                         }
                     }
-                }
-            } catch (e) {}
+                } catch(e) {}
+            }
+            
+            lastContentHash = currentHash;
+            
+            if (msgDiv.children.length === 0) {
+                msgDiv.innerHTML = '<div class="empty-chat">💬 пока нет сообщений</div>';
+            }
+            
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+        } catch(e) {
+            console.error(e);
         }
-        
-        lastContentHash = currentHash;
-        
-        if (msgDiv.children.length === 0) {
-            msgDiv.innerHTML = '<div class="empty-chat">🌋 пока нет сообщений</div>';
-        }
-        
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-        
-    } catch (err) {
-        console.error('Ошибка:', err);
-    } finally {
-        isUpdating = false;
     }
-}
 
     async function sendMessage() {
-        if (!isGitHubWorking || !currentChatSeed) {
+        if (!currentChatSeed) {
             alert('Сначала войдите в чат');
             return;
         }
@@ -1185,56 +593,61 @@ async function loadMessages(forceReload = false) {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text) return;
-
+        
         const fullMessage = `${currentUser}: ${text}`;
         const encrypted = CryptoJS.AES.encrypt(fullMessage, currentChatSeed).toString();
-
-        input.value = '';
-
+        
         try {
-            const getResp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            const getR = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
             });
-            
-            const getData = await getResp.json();
-            const oldContent = getData.files[FILE_NAME]?.content || '';
+            const data = await getR.json();
+            const oldContent = data.files[FILE_NAME].content || '';
             const newContent = oldContent + (oldContent ? '\n' : '') + encrypted;
-
+            
             await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                 method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    files: { [FILE_NAME]: { content: newContent } }
-                })
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files: { [FILE_NAME]: { content: newContent } } })
             });
             
-            const msgDiv = document.getElementById('messages');
-            
-            if (msgDiv.children.length === 1 && msgDiv.children[0].classList.contains('empty-chat')) {
-                msgDiv.innerHTML = '';
-            }
-            
-            msgDiv.innerHTML += `<div class="msg-item own-message">${fullMessage}</div>`;
-            msgDiv.scrollTop = msgDiv.scrollHeight;
-            
-            lastContentHash = '';
-            
-        } catch (err) {
+            input.value = '';
+            loadMessages(true);
+        } catch(e) {
             alert('Ошибка отправки');
         }
     }
 
-    function playNotificationSound() {
-        if (!soundEnabled || !notificationSound) return;
-        notificationSound.currentTime = 0;
-        notificationSound.play().catch(e => {});
+    function toggleTheme() {
+        const root = document.documentElement;
+        const primary = getComputedStyle(root).getPropertyValue('--primary').trim();
+        
+        if (primary === '#00a8ff') {
+            root.style.setProperty('--primary', '#ff6b00');
+            root.style.setProperty('--primary-dark', '#cc5500');
+            root.style.setProperty('--bg-dark', '#0a0500');
+            localStorage.setItem('theme', 'orange');
+        } else {
+            root.style.setProperty('--primary', '#00a8ff');
+            root.style.setProperty('--primary-dark', '#0097ea');
+            root.style.setProperty('--bg-dark', '#0a0a1a');
+            localStorage.setItem('theme', 'blue');
+        }
     }
 
-    // Периодическая проверка подключения
-    setInterval(checkGitHubConnection, 30000);
+    function loadTheme() {
+        const theme = localStorage.getItem('theme');
+        const root = document.documentElement;
+        if (theme === 'orange') {
+            root.style.setProperty('--primary', '#ff6b00');
+            root.style.setProperty('--primary-dark', '#cc5500');
+            root.style.setProperty('--bg-dark', '#0a0500');
+        }
+    }
+
+    loadTheme();
+    document.getElementById('msgInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    document.getElementById('chatSeed').addEventListener('keypress', e => { if (e.key === 'Enter') joinChat(); });
 </script>
 
 </body>
