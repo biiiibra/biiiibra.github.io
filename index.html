@@ -7,7 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* (стили те же, что и в предыдущей версии, добавляю только отсутствующие) */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#09090b;
@@ -598,9 +597,9 @@ input[type="range"]::-webkit-slider-thumb{
 
 <div class="modal" id="deleteChatModal">
   <div class="mbox">
-    <div class="mtitle">удалить чат?</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Все сообщения будут удалены без возможности восстановления</div>
-    <div class="mbtns"><button class="mok" id="confirmDeleteBtn" style="background:var(--mag);color:white;">удалить</button><button class="mcancel" id="cancelDeleteBtn">отмена</button></div>
+    <div class="mtitle">⚠️ удалить чат?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Чат будет удалён у вас и у собеседника. Все сообщения будут потеряны безвозвратно.</div>
+    <div class="mbtns"><button class="mok" id="confirmDeleteBtn" style="background:var(--mag);color:white;">🗑️ удалить</button><button class="mcancel" id="cancelDeleteBtn">отмена</button></div>
   </div>
 </div>
 
@@ -733,7 +732,6 @@ async function sendFile(file) {
     let fileData = e.target.result;
     let isImage = file.type.startsWith('image/');
     
-    // Сохраняем два сообщения: одно для превью, второе с данными файла
     let previewMsg = `${currentUser.username}: ${isImage ? '🖼️ Изображение' : '📎 Файл'}: ${file.name} (${formatFileSize(file.size)})`;
     let fileDataMsg = `${currentUser.username}: [FILE_DATA]${JSON.stringify({
       name: file.name,
@@ -800,7 +798,6 @@ function renderMessages(seed) {
     let div=document.createElement('div'); 
     div.className=`msg ${own?'own':'oth'}`;
     
-    // Проверяем, является ли сообщение данными файла
     let fileMatch = text.match(/\[FILE_DATA\](.*)/);
     if(fileMatch && text.startsWith('[FILE_DATA]')) {
       try {
@@ -828,12 +825,11 @@ function renderMessages(seed) {
         div.innerHTML = `<div class="msg-name">${esc(sender)}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">...</div>`; 
       }
     } else if(!text.startsWith('[FILE_DATA]')) {
-      // Обычное текстовое сообщение
       div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
         <div class="msg-bubble">${esc(text)}</div>
         <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
     } else {
-      continue; // Пропускаем отдельные сообщения с данными файлов (они уже обработаны как часть пары)
+      continue;
     }
     container.appendChild(div);
   }
@@ -911,11 +907,39 @@ async function selectChat(seed) {
   },3000);
 }
 
+// Функция удаления чата (синхронизируется с собеседником)
 async function deleteChat(seed) {
   let chatIndex = chats.findIndex(c => c.seed === seed);
   if(chatIndex === -1) return;
   let chatName = chats[chatIndex].name;
+  let partner = chats[chatIndex].partner;
+  
+  // Удаляем файл сообщений чата из Gist
+  let fname = `chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`;
+  try {
+    await gistPatch(GIST_ID, {[fname]: {content: ''}});
+  } catch(e) { console.log('Ошибка удаления файла чата'); }
+  
+  // Удаляем чат у текущего пользователя
   chats.splice(chatIndex, 1);
+  await saveUserData();
+  
+  // Удаляем чат у собеседника
+  let allUsers = await loadUsers();
+  let partnerUser = allUsers.find(u => u.username === partner);
+  if(partnerUser && partnerUser.chats) {
+    let partnerChatIndex = partnerUser.chats.findIndex(c => c.seed === seed);
+    if(partnerChatIndex !== -1) {
+      partnerUser.chats.splice(partnerChatIndex, 1);
+      await saveUsers(allUsers);
+      usersCache.set(partner, partnerUser);
+    }
+  }
+  
+  // Очищаем кэш сообщений
+  messagesCache.delete(seed);
+  
+  // Если удалили текущий открытый чат
   if(currentChatSeed === seed) {
     currentChatSeed = null;
     currentChatPartner = null;
@@ -923,19 +947,26 @@ async function deleteChat(seed) {
     $('chatAvatar').innerHTML = '💬';
     $('mi').disabled = true;
     $('sbtn').disabled = true;
-    $('msgs').innerHTML = '<div style="text-align:center;opacity:0.5;padding:40px">выберите чат</div>';
+    $('msgs').innerHTML = '<div style="text-align:center;opacity:0.5;padding:40px">💬 выберите чат</div>';
     $('rightPanel').classList.add('hidden');
-    if(chats.length > 0) await selectChat(chats[0].seed);
+    if(chats.length > 0) {
+      await selectChat(chats[0].seed);
+    }
   }
-  await saveUserData();
+  
   renderChatList();
-  showToast(`чат "${chatName}" удалён`);
+  showToast(`🗑️ чат "${chatName}" удалён у обоих собеседников`);
+}
+
+function openDeleteChatModal(seed) {
+  deleteChatCallback = () => deleteChat(seed);
+  $('deleteChatModal').classList.add('on');
 }
 
 function renderChatList() { 
   let container=$('chatList'); 
   if(!chats.length) { 
-    container.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">нет чатов<br>➕ создайте новый</div>'; 
+    container.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">✨ нет чатов<br>➕ создайте новый</div>'; 
     return; 
   } 
   container.innerHTML=''; 
@@ -946,15 +977,10 @@ function renderChatList() {
     let avatarHtml = '';
     if(c.avatarUrl && c.avatarUrl.startsWith('data:')) avatarHtml = `<img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover">`;
     else avatarHtml = c.avatarChar || '💬';
-    div.innerHTML=`<div class="chat-avatar">${avatarHtml}</div><div class="chat-info"><div class="chat-name">${esc(c.name)}</div><div class="chat-preview">${esc(c.lastMsg||'...')}</div></div><button class="chat-delete" onclick="event.stopPropagation();openDeleteChatModal('${c.seed}')">🗑️</button>`; 
+    div.innerHTML=`<div class="chat-avatar">${avatarHtml}</div><div class="chat-info"><div class="chat-name">${esc(c.name)}</div><div class="chat-preview">${esc(c.lastMsg||'Новый чат')}</div></div><button class="chat-delete" data-seed="${c.seed}" onclick="event.stopPropagation();openDeleteChatModal('${c.seed}')">🗑️</button>`; 
     div.onclick=()=>selectChat(c.seed); 
     container.appendChild(div); 
   } 
-}
-
-function openDeleteChatModal(seed) {
-  deleteChatCallback = () => deleteChat(seed);
-  $('deleteChatModal').classList.add('on');
 }
 
 async function saveUserData() { 
@@ -1188,8 +1214,17 @@ $('fileInput').onchange=(e)=>{ if(e.target.files[0]) sendFile(e.target.files[0])
 $('chatHeaderInfo').onclick=()=>{ if(currentChatPartner) showUserProfile(currentChatPartner); };
 $('closePanelBtn').onclick=()=>{ $('rightPanel').classList.add('hidden'); };
 $('closeUserProfileBtn').onclick=()=>{ $('userProfileModal').classList.remove('on'); };
-$('confirmDeleteBtn').onclick=()=>{ if(deleteChatCallback) deleteChatCallback(); $('deleteChatModal').classList.remove('on'); deleteChatCallback=null; };
-$('cancelDeleteBtn').onclick=()=>{ $('deleteChatModal').classList.remove('on'); deleteChatCallback=null; };
+$('confirmDeleteBtn').onclick = () => { 
+  if(deleteChatCallback) {
+    deleteChatCallback(); 
+    deleteChatCallback = null;
+  }
+  $('deleteChatModal').classList.remove('on'); 
+};
+$('cancelDeleteBtn').onclick = () => { 
+  $('deleteChatModal').classList.remove('on'); 
+  deleteChatCallback = null; 
+};
 
 function openNewChatModal() { $('newChatModal').classList.add('on'); $('targetUser').value=''; }
 function closeNewChatModal() { $('newChatModal').classList.remove('on'); }
