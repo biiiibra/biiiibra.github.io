@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* (стили те же, что и в предыдущей версии, добавляю только отсутствующие) */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#09090b;
@@ -245,7 +246,15 @@ body{
 .file-icon{font-size:20px;}
 .file-name{font-size:11px;word-break:break-all;flex:1;}
 .file-size{font-size:9px;color:var(--muted);}
-.msg-image{max-width:180px;max-height:180px;border-radius:10px;margin-top:5px;cursor:pointer;}
+.msg-image{
+  max-width:200px;
+  max-height:200px;
+  border-radius:12px;
+  margin-top:6px;
+  cursor:pointer;
+  object-fit:contain;
+  background:var(--card2);
+}
 .inrow{
   padding:12px 16px;
   background:rgba(9,9,11,0.85);
@@ -610,7 +619,7 @@ input[type="range"]::-webkit-slider-thumb{
 <input type="file" id="fileInput" class="hidden-file" multiple>
 
 <script>
-// Разбитый токен (GitHub не будет ругаться)
+// Разбитый токен
 const TOKEN = 'ghp_' + 'KARUAB' + '62R0V7' + 'TkGTvB' + 'xPzCpp' + 'oHcztk' + '3Gee2m';
 
 const GIST_ID = '3c13a9018358fc6dd01e0ec2df85f740';
@@ -635,7 +644,6 @@ function esc(s) { if(!s) return ''; return s.replace(/[&<>]/g, function(m) { if(
 function showToast(msg) { let t=document.createElement('div'); t.className='notif-toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
 function formatFileSize(bytes){ if(bytes<1024) return bytes+' B'; if(bytes<1048576) return (bytes/1024).toFixed(1)+' KB'; return (bytes/1048576).toFixed(1)+' MB'; }
 
-// Звук уведомления (встроенный синтез)
 function playNotificationSound() {
   if(!soundEnabled) return;
   try {
@@ -646,12 +654,12 @@ function playNotificationSound() {
     gainNode.connect(audioCtx.destination);
     oscillator.type = 'sine';
     oscillator.frequency.value = 880;
-    gainNode.gain.value = 0.15;
+    gainNode.gain.value = 0.12;
     oscillator.start();
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-    oscillator.stop(audioCtx.currentTime + 0.4);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+    oscillator.stop(audioCtx.currentTime + 0.3);
     if(audioCtx.state === 'suspended') audioCtx.resume();
-  } catch(e) { console.log('audio error:', e); }
+  } catch(e) { console.log('audio error'); }
 }
 
 async function gistGet(id) { let r=await fetch(`https://api.github.com/gists/${id}?t=${Date.now()}`,{headers:{Authorization:`token ${TOKEN}`}}); if(!r.ok) throw new Error(); return r.json(); }
@@ -679,7 +687,6 @@ async function checkForNewChats() {
           let partnerData = usersCache.get(chat.partner);
           if(partnerData && partnerData.avatar && partnerData.avatar !== chat.avatarUrl) {
             chat.avatarUrl = partnerData.avatar;
-            needUpdate = true;
           }
         }
       }
@@ -693,6 +700,353 @@ function generateSeed() { let chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 function encrypt(text,seed) { return CryptoJS.AES.encrypt(text,seed).toString(); }
 function decrypt(enc,seed) { try { return CryptoJS.AES.decrypt(enc,seed).toString(CryptoJS.enc.Utf8); } catch(e) { return null; } }
 
+async function loadMessages(seed) { 
+  let fname=`chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`; 
+  try { 
+    let data=await gistGet(GIST_ID); 
+    let content=data.files[fname]?.content||''; 
+    let lines=content.split('\n').filter(l=>l.trim()); 
+    let msgs=[]; 
+    for(let line of lines) { 
+      let dec=decrypt(line,seed); 
+      if(dec) msgs.push(dec); 
+    } 
+    return msgs; 
+  } catch(e) { return []; } 
+}
+
+async function saveMessage(seed, msgText) { 
+  let fname=`chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`; 
+  let data=await gistGet(GIST_ID); 
+  let old=data.files[fname]?.content||''; 
+  let enc=encrypt(msgText,seed); 
+  let newContent=old+(old?'\n':'')+enc; 
+  await gistPatch(GIST_ID,{[fname]:{content:newContent}}); 
+}
+
+async function sendFile(file) {
+  if(!currentChatSeed) return;
+  if(file.size > MAX_FILE_SIZE) { showToast(`❌ Файл больше ${MAX_FILE_SIZE/1024/1024}MB`); return; }
+  
+  let reader = new FileReader();
+  reader.onload = async (e) => {
+    let fileData = e.target.result;
+    let isImage = file.type.startsWith('image/');
+    
+    // Сохраняем два сообщения: одно для превью, второе с данными файла
+    let previewMsg = `${currentUser.username}: ${isImage ? '🖼️ Изображение' : '📎 Файл'}: ${file.name} (${formatFileSize(file.size)})`;
+    let fileDataMsg = `${currentUser.username}: [FILE_DATA]${JSON.stringify({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      data: fileData,
+      isImage: isImage
+    })}`;
+    
+    await saveMessage(currentChatSeed, previewMsg);
+    await saveMessage(currentChatSeed, fileDataMsg);
+    
+    let msgs = await loadMessages(currentChatSeed);
+    messagesCache.set(currentChatSeed, msgs);
+    renderMessages(currentChatSeed);
+    
+    let chat = chats.find(c=>c.seed===currentChatSeed);
+    if(chat) { 
+      chat.lastMsg = `${isImage ? '🖼️' : '📎'} ${file.name}`; 
+      chat.lastSeen=Date.now(); 
+      await saveUserData(); 
+      renderChatList(); 
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function sendMsg() { 
+  if(!currentChatSeed) return; 
+  let inp=$('mi'); 
+  let txt=inp.value.trim(); 
+  if(!txt) return; 
+  let full=`${currentUser.username}: ${txt}`; 
+  await saveMessage(currentChatSeed,full); 
+  inp.value=''; 
+  let msgs=await loadMessages(currentChatSeed); 
+  messagesCache.set(currentChatSeed,msgs); 
+  renderMessages(currentChatSeed); 
+  let chat=chats.find(c=>c.seed===currentChatSeed); 
+  if(chat) { 
+    chat.lastMsg=txt; 
+    chat.lastSeen=Date.now(); 
+    await saveUserData(); 
+    renderChatList(); 
+  } 
+}
+
+function renderMessages(seed) {
+  let container=$('msgs'); 
+  let msgs=messagesCache.get(seed)||[];
+  if(!msgs.length) { 
+    container.innerHTML='<div style="text-align:center;opacity:0.5;padding:40px">✉️ нет сообщений</div>'; 
+    return; 
+  }
+  container.innerHTML='';
+  
+  for(let i=0; i<msgs.length; i++) {
+    let raw = msgs[i];
+    let idx=raw.indexOf(':'); 
+    let sender=idx>0?raw.slice(0,idx):'?'; 
+    let text=idx>0?raw.slice(idx+2):raw;
+    let own=sender===currentUser.username;
+    
+    let div=document.createElement('div'); 
+    div.className=`msg ${own?'own':'oth'}`;
+    
+    // Проверяем, является ли сообщение данными файла
+    let fileMatch = text.match(/\[FILE_DATA\](.*)/);
+    if(fileMatch && text.startsWith('[FILE_DATA]')) {
+      try {
+        let fileData = JSON.parse(fileMatch[1]);
+        let fileContent = fileData.data;
+        
+        if(fileData.isImage) {
+          div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
+            <div class="msg-bubble">
+              <img src="${fileContent}" class="msg-image" onclick="showImageFull('${fileContent}')">
+              <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>`;
+        } else {
+          div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
+            <div class="msg-bubble">
+              <div class="file-attachment" onclick="downloadFile('${fileContent}','${fileData.name}')">
+                <div class="file-icon">📄</div>
+                <div class="file-name">${esc(fileData.name)}</div>
+                <div class="file-size">${formatFileSize(fileData.size)}</div>
+              </div>
+              <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>`;
+        }
+      } catch(e) { 
+        div.innerHTML = `<div class="msg-name">${esc(sender)}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">...</div>`; 
+      }
+    } else if(!text.startsWith('[FILE_DATA]')) {
+      // Обычное текстовое сообщение
+      div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
+        <div class="msg-bubble">${esc(text)}</div>
+        <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
+    } else {
+      continue; // Пропускаем отдельные сообщения с данными файлов (они уже обработаны как часть пары)
+    }
+    container.appendChild(div);
+  }
+  container.scrollTop=container.scrollHeight;
+}
+
+window.showImageFull = (src) => { 
+  let div=document.createElement('div'); 
+  div.className='image-viewer'; 
+  div.onclick=()=>div.remove(); 
+  div.innerHTML=`<img src="${src}">`; 
+  document.body.appendChild(div); 
+};
+
+window.downloadFile = (dataUrl, name) => { 
+  let a=document.createElement('a'); 
+  a.href=dataUrl; 
+  a.download=name; 
+  a.click(); 
+};
+
+window.showUserProfile = (username) => {
+  let user = usersCache.get(username);
+  if(!user) { showToast('пользователь не найден'); return; }
+  $('userProfileTitle').innerHTML = `профиль @${username}`;
+  $('userProfileUsername').innerHTML = `@${username}`;
+  $('userProfileBio').innerHTML = user.bio || 'нет информации о себе';
+  if(user.avatar && user.avatar.startsWith('data:')) $('userProfileAvatar').innerHTML=`<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover">`;
+  else $('userProfileAvatar').innerHTML = username[0].toUpperCase();
+  $('userProfileModal').classList.add('on');
+};
+
+async function selectChat(seed) {
+  if(currentChatSeed===seed) return; 
+  currentChatSeed=seed;
+  let chat=chats.find(c=>c.seed===seed);
+  if(chat) {
+    currentChatPartner = chat.partner;
+    $('chatTitle').innerHTML=esc(chat.name);
+    if(chat.avatarUrl && chat.avatarUrl.startsWith('data:')) $('chatAvatar').innerHTML=`<img src="${chat.avatarUrl}" style="width:100%;height:100%;object-fit:cover">`;
+    else $('chatAvatar').innerHTML=chat.avatarChar||'💬';
+    $('mi').disabled=false; 
+    $('sbtn').disabled=false;
+    if(currentChatPartner) {
+      let user = usersCache.get(currentChatPartner);
+      if(user) {
+        $('rightPanel').classList.remove('hidden');
+        if(user.avatar && user.avatar.startsWith('data:')) $('panelAvatar').innerHTML=`<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover">`;
+        else $('panelAvatar').innerHTML = currentChatPartner[0].toUpperCase();
+        $('panelUsername').innerHTML = `@${currentChatPartner}`;
+        $('panelBio').innerHTML = user.bio || 'нет информации';
+      }
+    } else {
+      $('rightPanel').classList.add('hidden');
+    }
+  }
+  let msgs=messagesCache.get(seed);
+  if(!msgs) { msgs=await loadMessages(seed); messagesCache.set(seed,msgs); }
+  renderMessages(seed); 
+  renderChatList(); 
+  closeSB();
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval=setInterval(async()=>{
+    let newMsgs=await loadMessages(seed); 
+    let old=messagesCache.get(seed)||[];
+    if(newMsgs.length!==old.length) { 
+      messagesCache.set(seed,newMsgs); 
+      renderMessages(seed);
+      let chat2=chats.find(c=>c.seed===seed);
+      if(chat2 && newMsgs.length>old.length) { 
+        playNotificationSound();
+        showToast(`📩 ${chat2.name}: новое сообщение`);
+      }
+    }
+  },3000);
+}
+
+async function deleteChat(seed) {
+  let chatIndex = chats.findIndex(c => c.seed === seed);
+  if(chatIndex === -1) return;
+  let chatName = chats[chatIndex].name;
+  chats.splice(chatIndex, 1);
+  if(currentChatSeed === seed) {
+    currentChatSeed = null;
+    currentChatPartner = null;
+    $('chatTitle').innerHTML = '—';
+    $('chatAvatar').innerHTML = '💬';
+    $('mi').disabled = true;
+    $('sbtn').disabled = true;
+    $('msgs').innerHTML = '<div style="text-align:center;opacity:0.5;padding:40px">выберите чат</div>';
+    $('rightPanel').classList.add('hidden');
+    if(chats.length > 0) await selectChat(chats[0].seed);
+  }
+  await saveUserData();
+  renderChatList();
+  showToast(`чат "${chatName}" удалён`);
+}
+
+function renderChatList() { 
+  let container=$('chatList'); 
+  if(!chats.length) { 
+    container.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">нет чатов<br>➕ создайте новый</div>'; 
+    return; 
+  } 
+  container.innerHTML=''; 
+  chats.sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0)); 
+  for(let c of chats) { 
+    let div=document.createElement('div'); 
+    div.className=`chat-item ${currentChatSeed===c.seed?'active':''}`; 
+    let avatarHtml = '';
+    if(c.avatarUrl && c.avatarUrl.startsWith('data:')) avatarHtml = `<img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover">`;
+    else avatarHtml = c.avatarChar || '💬';
+    div.innerHTML=`<div class="chat-avatar">${avatarHtml}</div><div class="chat-info"><div class="chat-name">${esc(c.name)}</div><div class="chat-preview">${esc(c.lastMsg||'...')}</div></div><button class="chat-delete" onclick="event.stopPropagation();openDeleteChatModal('${c.seed}')">🗑️</button>`; 
+    div.onclick=()=>selectChat(c.seed); 
+    container.appendChild(div); 
+  } 
+}
+
+function openDeleteChatModal(seed) {
+  deleteChatCallback = () => deleteChat(seed);
+  $('deleteChatModal').classList.add('on');
+}
+
+async function saveUserData() { 
+  let users=await loadUsers(); 
+  let idx=users.findIndex(u=>u.username===currentUser.username); 
+  if(idx>=0) { 
+    users[idx].chats=chats; 
+    users[idx].bio=currentUser.bio||''; 
+    users[idx].avatar=currentUser.avatar||''; 
+  } 
+  await saveUsers(users); 
+}
+
+async function loadUserProfile() { 
+  let users=await loadUsers(); 
+  let u=users.find(x=>x.username===currentUser.username); 
+  if(u) { 
+    currentUser.bio=u.bio||''; 
+    currentUser.avatar=u.avatar||''; 
+    chats=u.chats||[]; 
+    renderChatList(); 
+    if(chats.length && !currentChatSeed) selectChat(chats[0].seed); 
+    $('myUsername').innerText=currentUser.username; 
+    if(currentUser.avatar && currentUser.avatar.startsWith('data:')) $('myAvatar').innerHTML=`<img src="${currentUser.avatar}" class="avatar-img">`; 
+    else $('myAvatar').innerHTML=currentUser.username[0].toUpperCase(); 
+  } 
+}
+
+async function doLogin() { 
+  let u=$('loginUsername').value.trim(); 
+  let p=$('loginPassword').value.trim(); 
+  let users=await loadUsers(); 
+  let user=users.find(x=>x.username===u && x.password===CryptoJS.SHA256(p).toString()); 
+  if(!user) { $('loginMsg').innerText='❌ неверные данные'; $('loginMsg').style.color='#ff3b6f'; return; } 
+  $('loginMsg').innerText='✔️ успешно'; 
+  currentUser={username:u, passwordHash:user.password, bio:user.bio||'', avatar:user.avatar||''}; 
+  chats=user.chats||[]; 
+  await loadUserProfile(); 
+  if(userUpdateInterval) clearInterval(userUpdateInterval);
+  userUpdateInterval = setInterval(async () => { await checkForNewChats(); }, 5000);
+  document.getElementById('authBg').style.opacity='0'; 
+  setTimeout(()=>{ 
+    document.getElementById('authBg').style.display='none'; 
+    document.getElementById('app').classList.add('on'); 
+  },400); 
+}
+
+async function doReg() { 
+  let u=$('regUsername').value.trim(); 
+  let p=$('regPassword').value.trim(); 
+  if(!u.match(/^[a-zA-Z0-9_]{3,20}$/)) { $('regMsg').innerText='❌ username 3-20 лат, цифры, _'; return; } 
+  if(p.length<4) { $('regMsg').innerText='❌ пароль мин 4 символа'; return; } 
+  let users=await loadUsers(); 
+  if(users.find(x=>x.username===u)) { $('regMsg').innerText='❌ пользователь существует'; return; } 
+  let hash=CryptoJS.SHA256(p).toString(); 
+  users.push({username:u, password:hash, bio:'', avatar:'', chats:[], muted:[]}); 
+  await saveUsers(users); 
+  $('regMsg').innerText='✅ регистрация OK, войдите'; 
+  setTimeout(()=>{ document.querySelector('[data-tab="login"]').click(); },1200); 
+}
+
+async function createChatWithUser() {
+  let target=$('targetUser').value.trim().replace(/^@/,'');
+  if(!target || target===currentUser.username) { showToast('укажите другого пользователя'); return; }
+  await loadUsers();
+  if(!usersCache.get(target)) { showToast('пользователь не найден'); return; }
+  let existing=chats.find(c=>c.partner===target); 
+  if(existing) { selectChat(existing.seed); closeNewChatModal(); return; }
+  let seed=generateSeed();
+  let targetUser = usersCache.get(target);
+  let targetAvatar = targetUser?.avatar || '';
+  let myAvatar = currentUser.avatar || '';
+  let newChat={seed:seed, name:target, partner:target, lastMsg:'чат создан', avatarChar:target[0].toUpperCase(), avatarUrl:targetAvatar, lastSeen:Date.now(), muted:false};
+  chats.push(newChat);
+  await saveUserData();
+  let allUsers = await loadUsers();
+  let targetUserObj = allUsers.find(u=>u.username===target);
+  if(targetUserObj) {
+    if(!targetUserObj.chats) targetUserObj.chats=[];
+    let existingTargetChat = targetUserObj.chats.find(c=>c.partner===currentUser.username);
+    if(!existingTargetChat) {
+      targetUserObj.chats.push({seed:seed, name:currentUser.username, partner:currentUser.username, lastMsg:'чат создан', avatarChar:currentUser.username[0].toUpperCase(), avatarUrl:myAvatar, lastSeen:Date.now(), muted:false});
+      await saveUsers(allUsers);
+    }
+  }
+  renderChatList(); 
+  selectChat(seed); 
+  closeNewChatModal(); 
+  showToast(`чат с @${target} создан`);
+}
+
+// Crop functions
 function drawCropImage() {
   if(!cropCtx || !cropState.img) return;
   let w=400, h=400;
@@ -797,234 +1151,9 @@ $('cropSaveBtn').onclick=async()=>{
   $('profileAvatarPreview').style.display='flex';
   $('profileAvatarPreview').innerHTML=`<img src="${cropped}" style="width:100%;height:100%;object-fit:cover">`;
   showToast('аватар обновлён');
-  updatePanelForCurrentChat();
-  let currentChat = chats.find(c=>c.seed===currentChatSeed);
-  if(currentChat && currentChat.partner) {
-    let users = await loadUsers();
-    let partner = users.find(u=>u.username===currentChat.partner);
-    if(partner && partner.avatar) currentChat.avatarUrl = partner.avatar;
-    renderChatList();
-  }
 };
 $('cropCancelBtn').onclick=()=>{ $('cropEditor').style.display='none'; $('profileAvatarPreview').style.display='flex'; cropState.img=null; };
 $('avatarFile').onchange=(e)=>{ if(e.target.files[0]) uploadAndCropAvatar(e.target.files[0]); };
-
-async function loadMessages(seed) { let fname=`chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`; try { let data=await gistGet(GIST_ID); let content=data.files[fname]?.content||''; let lines=content.split('\n').filter(l=>l.trim()); let msgs=[]; for(let line of lines) { let dec=decrypt(line,seed); if(dec) msgs.push(dec); } return msgs; } catch(e) { return []; } }
-async function saveMessage(seed,msgText) { let fname=`chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`; let data=await gistGet(GIST_ID); let old=data.files[fname]?.content||''; let enc=encrypt(msgText,seed); let newContent=old+(old?'\n':'')+enc; await gistPatch(GIST_ID,{[fname]:{content:newContent}}); }
-
-async function sendFile(file) {
-  if(!currentChatSeed) return;
-  if(file.size > MAX_FILE_SIZE) { showToast(`❌ Файл больше ${MAX_FILE_SIZE/1024/1024}MB`); return; }
-  let reader = new FileReader();
-  reader.onload = async (e) => {
-    let fileData = e.target.result;
-    let fileType = file.type.startsWith('image/') ? 'image' : 'file';
-    let fileMsg = JSON.stringify({ type: 'file', name: file.name, size: file.size, data: fileData, mime: file.type });
-    let full = `${currentUser.username}: 📎${fileType === 'image' ? '🖼️' : '📄'} ${file.name} (${formatFileSize(file.size)})`;
-    await saveMessage(currentChatSeed, full);
-    await saveMessage(currentChatSeed, `${currentUser.username}: [FILE]${fileMsg}`);
-    let msgs = await loadMessages(currentChatSeed);
-    messagesCache.set(currentChatSeed, msgs);
-    renderMessages(currentChatSeed);
-    let chat = chats.find(c=>c.seed===currentChatSeed);
-    if(chat) { chat.lastMsg = `📎 ${file.name}`; chat.lastSeen=Date.now(); await saveUserData(); renderChatList(); }
-  };
-  reader.readAsDataURL(file);
-}
-
-async function sendMsg() { if(!currentChatSeed) return; let inp=$('mi'); let txt=inp.value.trim(); if(!txt) return; let full=`${currentUser.username}: ${txt}`; await saveMessage(currentChatSeed,full); inp.value=''; let msgs=await loadMessages(currentChatSeed); messagesCache.set(currentChatSeed,msgs); renderMessages(currentChatSeed); let chat=chats.find(c=>c.seed===currentChatSeed); if(chat) { chat.lastMsg=txt; chat.lastSeen=Date.now(); await saveUserData(); renderChatList(); } }
-
-function showUserProfile(username) {
-  let user = usersCache.get(username);
-  if(!user) { showToast('пользователь не найден'); return; }
-  $('userProfileTitle').innerHTML = `профиль @${username}`;
-  $('userProfileUsername').innerHTML = `@${username}`;
-  $('userProfileBio').innerHTML = user.bio || 'нет информации о себе';
-  if(user.avatar && user.avatar.startsWith('data:')) $('userProfileAvatar').innerHTML=`<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover">`;
-  else $('userProfileAvatar').innerHTML = username[0].toUpperCase();
-  $('userProfileModal').classList.add('on');
-}
-
-function renderMessages(seed) {
-  let container=$('msgs'); let msgs=messagesCache.get(seed)||[];
-  if(!msgs.length) { container.innerHTML='<div style="text-align:center;opacity:0.5;padding:40px">✉️ нет сообщений</div>'; return; }
-  container.innerHTML='';
-  for(let raw of msgs) {
-    let idx=raw.indexOf(':'); let sender=idx>0?raw.slice(0,idx):'?'; let text=idx>0?raw.slice(idx+2):raw;
-    let own=sender===currentUser.username;
-    let div=document.createElement('div'); div.className=`msg ${own?'own':'oth'}`;
-    let userNameSpan = `<span class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</span>`;
-    let fileMatch = text.match(/\[FILE\](.*)/);
-    if(fileMatch && text.startsWith('[FILE]')) {
-      try {
-        let fileData = JSON.parse(fileMatch[1]);
-        div.innerHTML = `<div>${userNameSpan}</div><div class="msg-bubble">`;
-        if(fileData.type === 'image') {
-          div.innerHTML += `<img src="${fileData.data}" class="msg-image" onclick="event.stopPropagation();showImageFull('${fileData.data}')">`;
-        } else {
-          div.innerHTML += `<div class="file-attachment" onclick="downloadFile('${fileData.data}','${fileData.name}')">
-            <div class="file-icon">📄</div><div class="file-name">${esc(fileData.name)}</div>
-            <div class="file-size">${formatFileSize(fileData.size)}</div></div>`;
-        }
-        div.innerHTML += `<div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`;
-      } catch(e) { div.innerHTML = `<div>${userNameSpan}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">...</div>`; }
-    } else {
-      div.innerHTML = `<div>${userNameSpan}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
-    }
-    container.appendChild(div);
-  } container.scrollTop=container.scrollHeight;
-}
-
-window.showImageFull = (src) => { let div=document.createElement('div'); div.className='image-viewer'; div.onclick=()=>div.remove(); div.innerHTML=`<img src="${src}">`; document.body.appendChild(div); };
-window.downloadFile = (dataUrl, name) => { let a=document.createElement('a'); a.href=dataUrl; a.download=name; a.click(); };
-window.showUserProfile = showUserProfile;
-
-function updatePanelForCurrentChat() {
-  if(currentChatPartner) {
-    let user = usersCache.get(currentChatPartner);
-    if(user) {
-      $('rightPanel').classList.remove('hidden');
-      if(user.avatar && user.avatar.startsWith('data:')) $('panelAvatar').innerHTML=`<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover">`;
-      else $('panelAvatar').innerHTML = currentChatPartner[0].toUpperCase();
-      $('panelUsername').innerHTML = `@${currentChatPartner}`;
-      $('panelBio').innerHTML = user.bio || 'нет информации';
-      $('panelStatus').innerHTML = 'онлайн';
-      return;
-    }
-  }
-  $('rightPanel').classList.add('hidden');
-}
-
-async function selectChat(seed) {
-  if(currentChatSeed===seed) return; currentChatSeed=seed;
-  let chat=chats.find(c=>c.seed===seed);
-  if(chat) {
-    currentChatPartner = chat.partner;
-    $('chatTitle').innerHTML=esc(chat.name);
-    if(chat.avatarUrl && chat.avatarUrl.startsWith('data:')) $('chatAvatar').innerHTML=`<img src="${chat.avatarUrl}" style="width:100%;height:100%;object-fit:cover">`;
-    else $('chatAvatar').innerHTML=chat.avatarChar||'💬';
-    $('mi').disabled=false; $('sbtn').disabled=false;
-    updatePanelForCurrentChat();
-  }
-  let msgs=messagesCache.get(seed);
-  if(!msgs) { msgs=await loadMessages(seed); messagesCache.set(seed,msgs); }
-  renderMessages(seed); renderChatList(); closeSB();
-  if(pollInterval) clearInterval(pollInterval);
-  pollInterval=setInterval(async()=>{
-    let newMsgs=await loadMessages(seed); let old=messagesCache.get(seed)||[];
-    if(newMsgs.length!==old.length) { messagesCache.set(seed,newMsgs); renderMessages(seed);
-      let chat2=chats.find(c=>c.seed===seed);
-      if(chat2 && newMsgs.length>old.length) { let lastMsg=newMsgs[newMsgs.length-1];
-        if(!lastMsg.startsWith(currentUser.username+':')) { if(!chat2.muted) { playNotificationSound(); showToast(`📩 ${chat2.name}: новое сообщение`); } } }
-    }
-  },2500);
-}
-
-async function deleteChat(seed) {
-  let chatIndex = chats.findIndex(c => c.seed === seed);
-  if(chatIndex === -1) return;
-  let chatName = chats[chatIndex].name;
-  chats.splice(chatIndex, 1);
-  if(currentChatSeed === seed) {
-    currentChatSeed = null;
-    currentChatPartner = null;
-    $('chatTitle').innerHTML = '—';
-    $('chatAvatar').innerHTML = '💬';
-    $('mi').disabled = true;
-    $('sbtn').disabled = true;
-    $('msgs').innerHTML = '<div style="text-align:center;opacity:0.5;padding:40px">выберите чат</div>';
-    $('rightPanel').classList.add('hidden');
-    if(chats.length > 0) await selectChat(chats[0].seed);
-  }
-  await saveUserData();
-  renderChatList();
-  showToast(`чат "${chatName}" удалён`);
-}
-
-function renderChatList() { 
-  let container=$('chatList'); 
-  if(!chats.length) { 
-    container.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">нет чатов<br>➕ создайте новый</div>'; 
-    return; 
-  } 
-  container.innerHTML=''; 
-  chats.sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0)); 
-  for(let c of chats) { 
-    let div=document.createElement('div'); 
-    div.className=`chat-item ${currentChatSeed===c.seed?'active':''}`; 
-    let avatarHtml = '';
-    if(c.avatarUrl && c.avatarUrl.startsWith('data:')) avatarHtml = `<img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover">`;
-    else avatarHtml = c.avatarChar || '💬';
-    div.innerHTML=`<div class="chat-avatar">${avatarHtml}</div><div class="chat-info"><div class="chat-name">${esc(c.name)}</div><div class="chat-preview">${esc(c.lastMsg||'...')}</div></div><button class="chat-delete" onclick="event.stopPropagation();openDeleteChatModal('${c.seed}')">🗑️</button>`; 
-    div.onclick=()=>selectChat(c.seed); 
-    container.appendChild(div); 
-  } 
-}
-
-function openDeleteChatModal(seed) {
-  deleteChatCallback = () => deleteChat(seed);
-  $('deleteChatModal').classList.add('on');
-}
-
-async function saveUserData() { 
-  let users=await loadUsers(); 
-  let idx=users.findIndex(u=>u.username===currentUser.username); 
-  if(idx>=0) { 
-    users[idx].chats=chats; 
-    users[idx].bio=currentUser.bio||''; 
-    users[idx].avatar=currentUser.avatar||''; 
-  } 
-  await saveUsers(users); 
-}
-
-async function loadUserProfile() { 
-  let users=await loadUsers(); 
-  let u=users.find(x=>x.username===currentUser.username); 
-  if(u) { 
-    currentUser.bio=u.bio||''; 
-    currentUser.avatar=u.avatar||''; 
-    chats=u.chats||[]; 
-    renderChatList(); 
-    if(chats.length && !currentChatSeed) selectChat(chats[0].seed); 
-    $('myUsername').innerText=currentUser.username; 
-    if(currentUser.avatar && currentUser.avatar.startsWith('data:')) $('myAvatar').innerHTML=`<img src="${currentUser.avatar}" class="avatar-img">`; 
-    else $('myAvatar').innerHTML=currentUser.username[0].toUpperCase(); 
-    updatePanelForCurrentChat(); 
-  } 
-}
-
-async function doLogin() { 
-  let u=$('loginUsername').value.trim(); 
-  let p=$('loginPassword').value.trim(); 
-  let users=await loadUsers(); 
-  let user=users.find(x=>x.username===u && x.password===CryptoJS.SHA256(p).toString()); 
-  if(!user) { $('loginMsg').innerText='❌ неверные данные'; $('loginMsg').style.color='#ff3b6f'; return; } 
-  $('loginMsg').innerText='✔️ успешно'; 
-  currentUser={username:u, passwordHash:user.password, bio:user.bio||'', avatar:user.avatar||''}; 
-  chats=user.chats||[]; 
-  await loadUserProfile(); 
-  if(userUpdateInterval) clearInterval(userUpdateInterval);
-  userUpdateInterval = setInterval(async () => { await checkForNewChats(); }, 5000);
-  document.getElementById('authBg').style.opacity='0'; 
-  setTimeout(()=>{ 
-    document.getElementById('authBg').style.display='none'; 
-    document.getElementById('app').classList.add('on'); 
-  },400); 
-}
-
-async function doReg() { 
-  let u=$('regUsername').value.trim(); 
-  let p=$('regPassword').value.trim(); 
-  if(!u.match(/^[a-zA-Z0-9_]{3,20}$/)) { $('regMsg').innerText='❌ username 3-20 лат, цифры, _'; return; } 
-  if(p.length<4) { $('regMsg').innerText='❌ пароль мин 4 символа'; return; } 
-  let users=await loadUsers(); 
-  if(users.find(x=>x.username===u)) { $('regMsg').innerText='❌ пользователь существует'; return; } 
-  let hash=CryptoJS.SHA256(p).toString(); 
-  users.push({username:u, password:hash, bio:'', avatar:'', chats:[], muted:[]}); 
-  await saveUsers(users); 
-  $('regMsg').innerText='✅ регистрация OK, войдите'; 
-  setTimeout(()=>{ document.querySelector('[data-tab="login"]').click(); },1200); 
-}
 
 async function saveProfile() { 
   let newName=$('profileUsername').value.trim(); 
@@ -1048,13 +1177,12 @@ async function saveProfile() {
   await loadUserProfile(); 
 }
 
-// Sound toggle
+// Event listeners
 $('soundToggle').onclick = () => {
   soundEnabled = !soundEnabled;
   $('soundText').innerText = soundEnabled ? 'звук вкл' : 'звук выкл';
   $('soundToggle').style.opacity = soundEnabled ? '1' : '0.5';
 };
-
 $('fileBtn').onclick=()=>{ if(!currentChatSeed) return; $('fileInput').click(); };
 $('fileInput').onchange=(e)=>{ if(e.target.files[0]) sendFile(e.target.files[0]); $('fileInput').value=''; };
 $('chatHeaderInfo').onclick=()=>{ if(currentChatPartner) showUserProfile(currentChatPartner); };
@@ -1069,36 +1197,6 @@ function openProfileModal() { $('profileModal').classList.add('on'); $('profileU
 function closeProfileModal() { $('profileModal').classList.remove('on'); }
 function openSB() { $('sidebar').classList.add('mopen'); $('movl').classList.add('on'); }
 function closeSB() { $('sidebar').classList.remove('mopen'); $('movl').classList.remove('on'); }
-
-async function createChatWithUser() {
-  let target=$('targetUser').value.trim().replace(/^@/,'');
-  if(!target || target===currentUser.username) { showToast('укажите другого пользователя'); return; }
-  await loadUsers();
-  if(!usersCache.get(target)) { showToast('пользователь не найден'); return; }
-  let existing=chats.find(c=>c.partner===target); 
-  if(existing) { selectChat(existing.seed); closeNewChatModal(); return; }
-  let seed=generateSeed();
-  let targetUser = usersCache.get(target);
-  let targetAvatar = targetUser?.avatar || '';
-  let myAvatar = currentUser.avatar || '';
-  let newChat={seed:seed, name:target, partner:target, lastMsg:'чат создан', avatarChar:target[0].toUpperCase(), avatarUrl:targetAvatar, lastSeen:Date.now(), muted:false};
-  chats.push(newChat);
-  await saveUserData();
-  let allUsers = await loadUsers();
-  let targetUserObj = allUsers.find(u=>u.username===target);
-  if(targetUserObj) {
-    if(!targetUserObj.chats) targetUserObj.chats=[];
-    let existingTargetChat = targetUserObj.chats.find(c=>c.partner===currentUser.username);
-    if(!existingTargetChat) {
-      targetUserObj.chats.push({seed:seed, name:currentUser.username, partner:currentUser.username, lastMsg:'чат создан', avatarChar:currentUser.username[0].toUpperCase(), avatarUrl:myAvatar, lastSeen:Date.now(), muted:false});
-      await saveUsers(allUsers);
-    }
-  }
-  renderChatList(); 
-  selectChat(seed); 
-  closeNewChatModal(); 
-  showToast(`чат с @${target} создан`);
-}
 
 document.querySelectorAll('.tbtn').forEach(btn=>{ btn.onclick=()=>{ let tab=btn.getAttribute('data-tab'); $('loginPanel').style.display=tab==='login'?'block':'none'; $('registerPanel').style.display=tab==='register'?'block':'none'; document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('on',b===btn)); }; });
 $('doLoginBtn').onclick=doLogin; $('doRegBtn').onclick=doReg;
