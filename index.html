@@ -708,7 +708,7 @@ async function loadMessages(seed) {
     let msgs=[]; 
     for(let line of lines) { 
       let dec=decrypt(line,seed); 
-      if(dec) msgs.push(dec); 
+      if(dec && dec.trim()) msgs.push(dec); 
     } 
     return msgs; 
   } catch(e) { return []; } 
@@ -732,17 +732,18 @@ async function sendFile(file) {
     let fileData = e.target.result;
     let isImage = file.type.startsWith('image/');
     
-    let previewMsg = `${currentUser.username}: ${isImage ? '🖼️ Изображение' : '📎 Файл'}: ${file.name} (${formatFileSize(file.size)})`;
-    let fileDataMsg = `${currentUser.username}: [FILE_DATA]${JSON.stringify({
+    // Одно сообщение, содержащее и данные файла, и информацию о нём
+    let fileMessage = JSON.stringify({
+      type: 'file',
       name: file.name,
       size: file.size,
-      type: file.type,
+      mime: file.type,
       data: fileData,
       isImage: isImage
-    })}`;
+    });
     
-    await saveMessage(currentChatSeed, previewMsg);
-    await saveMessage(currentChatSeed, fileDataMsg);
+    let fullMsg = `${currentUser.username}: [FILE]${fileMessage}`;
+    await saveMessage(currentChatSeed, fullMsg);
     
     let msgs = await loadMessages(currentChatSeed);
     messagesCache.set(currentChatSeed, msgs);
@@ -779,6 +780,16 @@ async function sendMsg() {
   } 
 }
 
+function showImageFullscreen(src) {
+  let viewer = document.createElement('div');
+  viewer.className = 'image-viewer';
+  viewer.onclick = () => viewer.remove();
+  let img = document.createElement('img');
+  img.src = src;
+  viewer.appendChild(img);
+  document.body.appendChild(viewer);
+}
+
 function renderMessages(seed) {
   let container=$('msgs'); 
   let msgs=messagesCache.get(seed)||[];
@@ -798,22 +809,24 @@ function renderMessages(seed) {
     let div=document.createElement('div'); 
     div.className=`msg ${own?'own':'oth'}`;
     
-    let fileMatch = text.match(/\[FILE_DATA\](.*)/);
-    if(fileMatch && text.startsWith('[FILE_DATA]')) {
+    // Проверяем, является ли сообщение файлом
+    let fileMatch = text.match(/^\[FILE\](.*)/);
+    if(fileMatch) {
       try {
         let fileData = JSON.parse(fileMatch[1]);
-        let fileContent = fileData.data;
         
         if(fileData.isImage) {
+          // Изображение
           div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
             <div class="msg-bubble">
-              <img src="${fileContent}" class="msg-image" onclick="showImageFull('${fileContent}')">
+              <img src="${fileData.data}" class="msg-image" onclick="showImageFullscreen('${fileData.data}')">
               <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
             </div>`;
         } else {
+          // Обычный файл
           div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
             <div class="msg-bubble">
-              <div class="file-attachment" onclick="downloadFile('${fileContent}','${fileData.name}')">
+              <div class="file-attachment" onclick="downloadFile('${fileData.data}','${fileData.name}')">
                 <div class="file-icon">📄</div>
                 <div class="file-name">${esc(fileData.name)}</div>
                 <div class="file-size">${formatFileSize(fileData.size)}</div>
@@ -824,26 +837,18 @@ function renderMessages(seed) {
       } catch(e) { 
         div.innerHTML = `<div class="msg-name">${esc(sender)}</div><div class="msg-bubble">${esc(text)}</div><div class="msg-time">...</div>`; 
       }
-    } else if(!text.startsWith('[FILE_DATA]')) {
+    } else {
+      // Обычное текстовое сообщение
       div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
         <div class="msg-bubble">${esc(text)}</div>
         <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
-    } else {
-      continue;
     }
     container.appendChild(div);
   }
-  container.scrollTop=container.scrollHeight;
+  container.scrollTop = container.scrollHeight;
 }
 
-window.showImageFull = (src) => { 
-  let div=document.createElement('div'); 
-  div.className='image-viewer'; 
-  div.onclick=()=>div.remove(); 
-  div.innerHTML=`<img src="${src}">`; 
-  document.body.appendChild(div); 
-};
-
+window.showImageFullscreen = showImageFullscreen;
 window.downloadFile = (dataUrl, name) => { 
   let a=document.createElement('a'); 
   a.href=dataUrl; 
@@ -895,11 +900,11 @@ async function selectChat(seed) {
   pollInterval=setInterval(async()=>{
     let newMsgs=await loadMessages(seed); 
     let old=messagesCache.get(seed)||[];
-    if(newMsgs.length!==old.length) { 
+    if(newMsgs.length !== old.length) { 
       messagesCache.set(seed,newMsgs); 
       renderMessages(seed);
       let chat2=chats.find(c=>c.seed===seed);
-      if(chat2 && newMsgs.length>old.length) { 
+      if(chat2 && newMsgs.length > old.length) { 
         playNotificationSound();
         showToast(`📩 ${chat2.name}: новое сообщение`);
       }
@@ -907,7 +912,6 @@ async function selectChat(seed) {
   },3000);
 }
 
-// Функция удаления чата (синхронизируется с собеседником)
 async function deleteChat(seed) {
   let chatIndex = chats.findIndex(c => c.seed === seed);
   if(chatIndex === -1) return;
@@ -936,10 +940,8 @@ async function deleteChat(seed) {
     }
   }
   
-  // Очищаем кэш сообщений
   messagesCache.delete(seed);
   
-  // Если удалили текущий открытый чат
   if(currentChatSeed === seed) {
     currentChatSeed = null;
     currentChatPartner = null;
