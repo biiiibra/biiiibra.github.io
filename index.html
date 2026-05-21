@@ -293,7 +293,7 @@ async function sendFile(file) {
     let fileData = e.target.result;
     let isImage = file.type.startsWith('image/');
     
-    // Сохраняем сообщение с данными файла (зашифрованное)
+    // Отправляем одно сообщение с данными файла
     let fileMsgData = {
       type: 'file',
       name: file.name,
@@ -302,11 +302,8 @@ async function sendFile(file) {
       data: fileData,
       isImage: isImage
     };
-    let fullMsg = `${currentUser.username}: 🖼️📎 ${isImage ? 'Изображение' : 'Файл'}: ${file.name} (${formatFileSize(file.size)})`;
-    let dataMsg = `${currentUser.username}: [FILE_DATA]${JSON.stringify(fileMsgData)}`;
-    
+    let fullMsg = `${currentUser.username}: [FILE]${JSON.stringify(fileMsgData)}`;
     await saveMessage(currentChatSeed, fullMsg);
-    await saveMessage(currentChatSeed, dataMsg);
     
     let msgs = await loadMessages(currentChatSeed);
     messagesCache.set(currentChatSeed, msgs);
@@ -380,43 +377,20 @@ function renderMessages(seed) {
   }
   container.innerHTML='';
   
-  for(let i=0; i<msgs.length; i++) {
-    let raw = msgs[i];
-    let idx=raw.indexOf(':'); 
-    let sender=idx>0?raw.slice(0,idx):'?'; 
-    let text=idx>0?raw.slice(idx+2):raw;
-    let own=sender===currentUser.username;
-    
-    // Пропускаем сообщения с данными файлов (они обрабатываются отдельно)
-    if(text.startsWith('[FILE_DATA]')) continue;
-    
-    // Пропускаем короткие сообщения-превью файлов (чтобы не было дублирования)
-    if(text.startsWith('🖼️📎') || text.startsWith('🖼️') && text.includes('Изображение')) continue;
-    
-    let div=document.createElement('div'); 
-    div.className=`msg ${own?'own':'oth'}`;
-    
-    // Обычное текстовое сообщение
-    div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
-      <div class="msg-bubble">${esc(text)}</div>
-      <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
-    container.appendChild(div);
-  }
-  
-  // Отдельно обрабатываем файловые сообщения (ищем во всех сообщениях)
   for(let raw of msgs) {
     let idx=raw.indexOf(':'); 
     let sender=idx>0?raw.slice(0,idx):'?'; 
     let text=idx>0?raw.slice(idx+2):raw;
     let own=sender===currentUser.username;
     
-    let fileMatch = text.match(/^\[FILE_DATA\](.*)/);
+    let div=document.createElement('div'); 
+    div.className=`msg ${own?'own':'oth'}`;
+    
+    // Проверяем, является ли сообщение файлом
+    let fileMatch = text.match(/^\[FILE\](.*)/);
     if(fileMatch) {
       try {
         let fd = JSON.parse(fileMatch[1]);
-        let div = document.createElement('div'); 
-        div.className=`msg ${own?'own':'oth'}`;
-        
         if(fd.isImage) {
           div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
             <div class="msg-bubble">
@@ -434,9 +408,16 @@ function renderMessages(seed) {
               <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
             </div>`;
         }
-        container.appendChild(div);
-      } catch(e) { console.log('file parse error', e); }
+      } catch(e) { 
+        div.innerHTML = `<div class="msg-name">${esc(sender)}</div><div class="msg-bubble">[Файл] ${esc(text)}</div><div class="msg-time">...</div>`; 
+      }
+    } else {
+      // Обычное текстовое сообщение
+      div.innerHTML = `<div class="msg-name" onclick="showUserProfile('${esc(sender)}')">${esc(sender)}</div>
+        <div class="msg-bubble">${esc(text)}</div>
+        <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
     }
+    container.appendChild(div);
   }
   container.scrollTop = container.scrollHeight;
 }
@@ -493,17 +474,14 @@ async function deleteChat(seed) {
   let chatName = chats[chatIndex].name;
   let partner = chats[chatIndex].partner;
   
-  // Удаляем файл сообщений чата из Gist
   let fname = `chat_${CryptoJS.SHA256(seed).toString().slice(0,16)}.txt`;
   try {
     await gistPatch(GIST_ID, {[fname]: {content: ''}});
   } catch(e) { console.log('Ошибка удаления файла чата'); }
   
-  // Удаляем чат у текущего пользователя
   chats.splice(chatIndex, 1);
   await saveUserData();
   
-  // Удаляем чат у собеседника
   let allUsers = await loadUsers();
   let partnerUser = allUsers.find(u => u.username === partner);
   if(partnerUser && partnerUser.chats) {
