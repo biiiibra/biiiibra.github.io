@@ -1342,16 +1342,12 @@
                 if (chat) { chat.lastMsg = txt;
                     chat.lastSeen = Date.now(); await saveUserData();
                     renderChats(); }
-                // Уведомление для группы — отправляем всем участникам
+                // Уведомление для группы
                 if (chat && chat.isGroup) {
                     let members = chat.members || [];
                     for (let m of members) {
                         if (m === currentUser.username) continue;
-                        let u = await loadUsers();
-                        let member = u.find(x => x.username === m);
-                        if (member) {
-                            sendBrowserNotif(`💬 Группа: ${chat.name}`, `${currentUser.username}: ${txt.slice(0, 40)}`);
-                        }
+                        sendBrowserNotif(`💬 Группа: ${chat.name}`, `${currentUser.username}: ${txt.slice(0, 40)}`);
                     }
                 }
             } catch (e) { console.error('Send error:', e);
@@ -1609,7 +1605,6 @@
                             lastSeen: Date.now(),
                             type: 'group'
                         });
-                        // Отправляем уведомление участнику
                         sendBrowserNotif(`👥 Новая группа: ${name}`, `${currentUser.username} добавил(а) вас в группу`);
                     }
                 }
@@ -1630,7 +1625,6 @@
             let chat = chats.find(c => c.seed === seed);
             if (!chat) return;
 
-            // Обновляем у всех участников
             let members = chat.members || [];
             for (let u of allUsers) {
                 if (members.includes(u.username) || u.username === currentUser.username) {
@@ -1644,7 +1638,6 @@
             }
             await saveUsers(allUsers);
 
-            // Обновляем локально
             chat.avatarUrl = avatarData;
             renderChats();
             if (currentChatSeed === seed) {
